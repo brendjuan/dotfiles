@@ -1,0 +1,56 @@
+# SWAGLOCK 9000 v2.0 - cursed glitchcore edition
+# "password is password"
+# "it works on my machine" - last words before disaster
+
+# the sacred wallpaper (do NOT question it)
+image=~/.config/swaylock/img/lockscreen.png
+scaling=fill
+
+# MEGA CHONK indicator - wider than my will to live
+indicator-radius=169
+indicator-thickness=42
+indicator-idle-visible
+
+# expose your skill issue to the whole room
+show-failed-attempts
+
+# ---- IDLE STATE: corrupted vaporwave ----
+# glitchy translucent void inside, magenta ring but slightly "off" green
+# like a monitor that's been punched once
+inside-color=0a000a77
+ring-color=ff00eedd
+line-uses-inside
+text-color=32ff0aee
+separator-color=ff00ff44
+font=monospace
+font-size=32
+
+# ---- TYPING: matrix but the matrix has a virus ----
+# sickly cyan/green combo, like a CRT having a stroke
+inside-ver-color=001a0088
+ring-ver-color=00ffcccc
+text-ver-color=00ffaaff
+key-hl-color=ff00ff99
+
+# ---- WRONG: emotional damage ----
+# flickery red-on-red, maximum shame energy
+inside-wrong-color=33000099
+ring-wrong-color=ff003cff
+text-wrong-color=ff2222ff
+bs-hl-color=ff4400ff
+
+# ---- CLEARED: ctrl+z my life choices ----
+# glitched pink/purple, like a jpeg compressed 47 times
+inside-clear-color=1a002288
+ring-clear-color=ff44ddee
+text-clear-color=cc33ffee
+
+# ---- CAPS LOCK: WHY ARE YOU YELLING ----
+# radioactive warning yellow with toxic green highlights
+# looks like a safety sign at chernobyl
+ring-caps-lock-color=ffee00ff
+inside-caps-lock-color=1a1a0088
+text-caps-lock-color=eeff00ff
+caps-lock-bs-hl-color=ff3300ff
+caps-lock-key-hl-color=00ff00ff
+indicator-caps-lock

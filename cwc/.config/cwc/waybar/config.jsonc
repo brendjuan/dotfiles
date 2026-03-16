@@ -1,0 +1,62 @@
+{
+    // WAYBAR 9000 - the bar that haunts your desktop
+    // "it's not a bug, it's a feature" - every dev ever
+
+    "layer": "top",
+    "position": "top",
+    "height": 16,
+    "modules-left": ["dwl/tags"],
+    "modules-center": [],
+    "modules-right": ["dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+
+    "dwl/tags": {
+        "num-tags": 9,
+        "tag-labels": ["ア", "イ", "ウ", "エ", "オ", "カ", "キ", "ク", "ケ"]
+    },
+
+    "dwl/window": {
+        "format": "{layout}",
+        "tooltip": false
+    },
+
+    "backlight": {
+        "format": "󰃠 {percent}%",
+        "tooltip": false
+    },
+
+    "cpu": {
+        "format": "󰻠 {usage}%",
+        "interval": 5,
+        "on-click": "kitty --app-id float-term btop"
+    },
+
+    "memory": {
+        "format": "󰍛 {percentage}%",
+        "interval": 5,
+        "on-click": "kitty --app-id float-term btop"
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-muted": "󰝟 muted",
+        "format-icons": {
+            "default": ["󰕿", "󰖀", "󰕾"]
+        },
+        "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+    },
+
+    "battery": {
+        "format": "{icon} {capacity}%",
+        "format-charging": "󰂄 {capacity}%",
+        "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+        "interval": 30,
+        "states": {
+            "warning": 20,
+            "critical": 10
+        }
+    },
+
+    "clock": {
+        "format": "{:%a %b %d  %H:%M}"
+    }
+}

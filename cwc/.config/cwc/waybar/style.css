@@ -1,0 +1,108 @@
+/* WAYBAR 9000 - cursed glitchcore edition */
+/* matches the swaglock energy - do NOT question the colors */
+
+* {
+    font-family: "Hack Nerd Font", monospace;
+    font-size: 10px;
+    min-height: 0;
+}
+
+window#waybar {
+    /* translucent void - like a monitor that's been punched once */
+    background-color: rgba(10, 0, 10, 0.88);
+    color: #00ffaa;
+}
+
+#tags button {
+    padding: 0 5px;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    /* ghosted out - forgotten tags in the void */
+    color: rgba(50, 255, 10, 0.27);
+    background: transparent;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+#tags button.occupied {
+    /* something lives here - sickly green glow */
+    color: rgba(50, 255, 10, 0.67);
+}
+
+#tags button.focused {
+    /* ACTIVE - magenta ring energy from the swaglock */
+    color: #ff00ee;
+    background-color: rgba(255, 0, 238, 0.12);
+    border-bottom: 2px solid #ff00ee;
+}
+
+#tags button.urgent {
+    /* emotional damage - same red shame as wrong password */
+    color: #ff003c;
+    background-color: rgba(255, 0, 60, 0.1);
+}
+
+#tags button:hover {
+    /* CRT phosphor burn on hover */
+    color: #00ffcc;
+    background-color: rgba(0, 255, 204, 0.08);
+}
+
+#window {
+    padding: 0 8px;
+    color: #ff00ee;
+    font-size: 11px;
+    /* first module on the right - no left divider needed */
+}
+
+#backlight {
+    padding: 0 8px;
+    color: #ff00ee;
+    /* screen glow leaking through the void */
+    border-left: 1px solid rgba(255, 0, 238, 0.3);
+}
+
+#cpu {
+    padding: 0 8px;
+    color: #ff00ee;
+    /* scanline separators - the CRT bleeds between segments */
+    border-left: 1px solid rgba(255, 0, 238, 0.3);
+}
+
+#memory {
+    padding: 0 8px;
+    color: #ff00ee;
+    border-left: 1px solid rgba(255, 0, 238, 0.3);
+}
+
+#pulseaudio {
+    padding: 0 8px;
+    color: #ff00ee;
+    border-left: 1px solid rgba(255, 0, 238, 0.3);
+}
+
+#pulseaudio.muted {
+    color: rgba(50, 255, 10, 0.27);
+}
+
+#battery {
+    padding: 0 8px;
+    color: #ff00ee;
+    border-left: 1px solid rgba(255, 0, 238, 0.3);
+}
+
+#battery.warning {
+    color: #ffcc00;
+}
+
+#battery.critical {
+    color: #ff003c;
+}
+
+#clock {
+    padding: 0 8px;
+    /* time is a magenta construct */
+    color: #ff00ee;
+    border-left: 1px solid rgba(255, 0, 238, 0.3);
+}

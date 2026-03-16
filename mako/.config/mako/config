@@ -1,0 +1,24 @@
+# mako notification daemon config
+# glitchcore aesthetic - CRT void energy
+
+font=Hack Nerd Font 11
+background-color=#0a000aee
+text-color=#00ffaa
+border-color=#ff00ee
+border-size=2
+border-radius=0
+padding=12
+margin=8
+width=320
+height=150
+default-timeout=5000
+max-visible=3
+layer=overlay
+anchor=top-right
+
+# urgent notifications - blood red alert
+[urgency=critical]
+background-color=#0a000aee
+text-color=#ff003c
+border-color=#ff003c
+default-timeout=0

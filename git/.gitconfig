@@ -1,0 +1,8 @@
+[user]
+	email = {{GIT_EMAIL}}
+	name = {{GIT_NAME}}
+[init]
+	defaultBranch = main
+
+[includeIf "gitdir:~/Personal/"]
+        path = ~/.gitconfig-personal
