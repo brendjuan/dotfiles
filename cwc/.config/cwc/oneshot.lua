@@ -14,11 +14,6 @@ cwc.spawn_with_shell("waybar -c ~/.config/cwc/waybar/config.jsonc -s ~/.config/c
 cwc.spawn_with_shell("playerctld daemon")
 cwc.spawn_with_shell("mako")
 
-local idle_cmd = "playerctl pause; cwctl screen --filter '*' set dpms false"
-local resume_cmd = "playerctl play; cwctl screen --filter='*' set dpms true"
-local swayidle_cmd = string.format('swayidle -w timeout 3600 "%s" resume "%s"', idle_cmd, resume_cmd)
-cwc.spawn_with_shell(swayidle_cmd)
-
 -- for app that use tray better to wait for the bar to load
 cwc.timer.new(3, function()
     cwc.spawn { "copyq" }
@@ -30,3 +25,7 @@ cwc.setenv("HYPRCURSOR_THEME", "Bibata-Modern-Classic")
 -- xdg-desktop-portal-wlr
 cwc.spawn_with_shell(
     "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
+
+-- swayidle: lock screen before sleep (lid close)
+cwc.spawn_with_shell('swayidle -w before-sleep "swaylock -f"')
+
