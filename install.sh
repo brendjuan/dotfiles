@@ -39,7 +39,8 @@ git -C "$DOTFILES_DIR" checkout -- .
 
 # Replace placeholders after checkout so the symlinked files get real values
 echo "Applying config..."
-sed -i "s/{{GIT_NAME}}/$GIT_NAME/g; s/{{GIT_EMAIL}}/$GIT_EMAIL/g" "$DOTFILES_DIR/git/.gitconfig"
+sed -i "s/{{WORK_GIT_NAME}}/$WORK_GIT_NAME/g; s/{{WORK_GIT_EMAIL}}/$WORK_GIT_EMAIL/g" "$DOTFILES_DIR/git/.gitconfig"
+sed -i "s/{{PERSONAL_GIT_NAME}}/$PERSONAL_GIT_NAME/g; s/{{PERSONAL_GIT_EMAIL}}/$PERSONAL_GIT_EMAIL/g" "$DOTFILES_DIR/git/.gitconfig-personal"
 
 echo ""
 echo "Done! All packages stowed."

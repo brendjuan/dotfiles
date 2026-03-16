@@ -1,6 +1,6 @@
 [user]
-	email = {{GIT_EMAIL}}
-	name = {{GIT_NAME}}
+	email = {{WORK_GIT_EMAIL}}
+	name = {{WORK_GIT_NAME}}
 [init]
 	defaultBranch = main
 
