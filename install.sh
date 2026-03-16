@@ -20,6 +20,13 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 source "$CONFIG_FILE"
 
+# If no custom lockscreen, link the example
+LOCKSCREEN="$DOTFILES_DIR/swaylock/.config/swaylock/img/lockscreen.png"
+if [ ! -f "$LOCKSCREEN" ]; then
+    echo "No lockscreen.png found, linking example..."
+    ln -s lockscreen.png.example "$LOCKSCREEN"
+fi
+
 echo "Stowing dotfiles from $DOTFILES_DIR"
 
 for pkg in "${PACKAGES[@]}"; do
