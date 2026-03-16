@@ -121,5 +121,8 @@ export PATH="$DEPOT_INSTALL_DIR:$PATH"
 export CYCLONEDDS_URI="file:///home/bjax/Workspace/1/ros-docker/cyclonedds-dev.xml"
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
+source /opt/ros/jazzy/setup.zsh
+
+alias emacs="emacs -nw"
 export VISUAL="emacs -nw"
 export EDITOR="$VISUAL"

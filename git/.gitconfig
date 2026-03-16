@@ -5,4 +5,4 @@
 	defaultBranch = main
 
 [includeIf "gitdir:~/Personal/"]
-        path = ~/.gitconfig-personal
+	path = ~/.gitconfig-personal

@@ -47,12 +47,12 @@ esac
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	# We have color support; assume it's compliant with Ecma-48
-	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-	# a case would tend to support setf rather than setaf.)
-	color_prompt=yes
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
     else
-	color_prompt=
+        color_prompt=
     fi
 fi
 
@@ -117,3 +117,14 @@ if ! shopt -oq posix; then
 fi
 export PATH="$HOME/.local/bin:$PATH"
 . "$HOME/.cargo/env"
+
+export DEPOT_INSTALL_DIR="/home/bjax/.depot/bin"
+export PATH="$DEPOT_INSTALL_DIR:$PATH"
+export CYCLONEDDS_URI="file:///home/bjax/Workspace/1/ros-docker/cyclonedds-dev.xml"
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+source /opt/ros/jazzy/setup.bash
+
+alias emacs="emacs -nw"
+export VISUAL="emacs -nw"
+export EDITOR="$VISUAL"
