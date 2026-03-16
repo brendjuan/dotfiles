@@ -19,3 +19,5 @@ config.env
 
 # Stow internal
 .stow-local-ignore
+
+lockscreen.png
