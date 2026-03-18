@@ -2,6 +2,13 @@
 
 Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
+![Tiling layout with VS Code, neofetch, and btop](screenshots/tiling.png)
+
+<p align="center">
+  <img src="screenshots/desktop.png" width="49%" alt="Desktop with cmatrix" />
+  <img src="screenshots/lockscreen.png" width="49%" alt="Lockscreen" />
+</p>
+
 ## Packages
 
 | Package    | What it configures              |
