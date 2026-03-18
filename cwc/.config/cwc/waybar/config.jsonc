@@ -7,7 +7,14 @@
     "height": 16,
     "modules-left": ["dwl/tags"],
     "modules-center": [],
-    "modules-right": ["dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+    "modules-right": ["custom/recording", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+
+    "custom/recording": {
+        "exec": "if pgrep -x wf-recorder > /dev/null; then echo '󰑋 REC'; else echo ''; fi",
+        "interval": 2,
+        "on-click": "pkill -INT wf-recorder || true",
+        "tooltip": false
+    },
 
     "dwl/tags": {
         "num-tags": 9,
