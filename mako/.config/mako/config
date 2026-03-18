@@ -16,6 +16,10 @@ max-visible=3
 layer=overlay
 anchor=top-right
 
+# suppress stray escape sequence notifications from Claude Code
+[app-name=kitty summary="4;0;"]
+invisible=1
+
 # urgent notifications - blood red alert
 [urgency=critical]
 background-color=#0a000aee
