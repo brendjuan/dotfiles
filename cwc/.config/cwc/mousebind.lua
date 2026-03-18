@@ -38,7 +38,7 @@ cful.pointer.bind_swipe(3, direction.RIGHT, function()
     cful.tag.viewnext()
 end, function()
     cwc.screen.focused().active_tag = prev_active_tag
-end, { skip_events = true, threshold = 250, cancel_threshold = 60 })
+end)
 
 cful.pointer.bind_swipe(3, direction.LEFT, function()
     prev_active_tag = cwc.screen.focused().active_tag

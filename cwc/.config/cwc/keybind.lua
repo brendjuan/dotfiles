@@ -336,6 +336,18 @@ for i = 1, 9 do
 end
 
 kbd.bind(MODKEY, "0", function()
+    local s = cwc.screen.focused()
+    local ws = s.active_workspace
+    if ws == 10 then
+        s:get_tag(11):view_only()
+    elseif ws == 11 then
+        s:get_tag(10):view_only()
+    else
+        s:get_tag(10):view_only()
+    end
+end, { description = "jump to / toggle between sim tags (GZ/RV)", group = "tag" })
+
+kbd.bind({ MODKEY, mod.SHIFT }, "0", function()
     local scrs = cwc.screen.get()
     for _, s in pairs(scrs) do
         cful.tag.viewnone(s)

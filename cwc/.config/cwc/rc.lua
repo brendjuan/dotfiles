@@ -65,8 +65,8 @@ cwc.connect_signal("screen::new", function(screen)
     -- don't apply if restored since it will reset whats manually changed
     if screen.restored then return end
 
-    -- set all "general" tags to master/stack mode by default
-    for i = 1, 9 do
+    -- set all tags (including sim tags 10-11) to master/stack mode by default
+    for i = 1, 11 do
         tag.layout_mode(i, enum.layout_mode.MASTER, screen)
     end
 
@@ -79,6 +79,52 @@ end)
 --         screen.description or "-", #screen.clients)
 --     cwc.spawn_with_shell(cmd)
 -- end)
+
+--------------------------- ROS SIMULATION TAGS ----------------------------
+-- Ephemeral tags for Gazebo and RViz launched by `task gazebo:sim:rviz`.
+-- Tags appear when sim windows map and vanish when all sim windows close.
+
+local DEFAULT_MAX_WORKSPACE = 9
+
+local SIM_TAGS = {
+    gazebo = 10,
+    rviz   = 11,
+}
+
+local SIM_TAG_LABELS = {
+    [10] = "GZ",
+    [11] = "RV",
+}
+
+--- Return the sim tag index for a client, or nil if not a sim window.
+local function sim_tag_for(client)
+    local aid   = (client.appid or ""):lower()
+    local title = (client.title or ""):lower()
+
+    -- gz-sim, gzclient, gazebo, etc.
+    if aid:match("gz") or aid:match("gazebo") or title:match("gazebo") then
+        return SIM_TAGS.gazebo
+    end
+
+    -- rviz2, rviz, RViz, etc.
+    if aid:match("rviz") or title:match("rviz") then
+        return SIM_TAGS.rviz
+    end
+end
+
+--- Shrink max_general_workspace to hide empty sim tags.
+local function shrink_sim_tags(screen, unmapping_client)
+    local max_needed = DEFAULT_MAX_WORKSPACE
+    for _, tidx in pairs(SIM_TAGS) do
+        for _, c in ipairs(screen:get_clients(false)) do
+            if c ~= unmapping_client and c.workspace == tidx then
+                max_needed = math.max(max_needed, tidx)
+                break
+            end
+        end
+    end
+    screen.max_general_workspace = max_needed
+end
 
 ------------------------ CLIENT BEHAVIOR -----------------------------
 crules.add_client_rule {
@@ -100,6 +146,23 @@ crules.add_client_rule {
 cwc.connect_signal("client::map", function(client)
     -- unmanaged client is a popup/tooltip client in xwayland so lets skip it.
     if client.unmanaged then return end
+
+    -- ROS sim windows → ephemeral tags
+    local sim_tag = sim_tag_for(client)
+    if sim_tag then
+        local screen = client.screen
+        if screen.max_general_workspace < sim_tag then
+            screen.max_general_workspace = sim_tag
+        end
+        local t = screen:get_tag(sim_tag)
+        t.label = SIM_TAG_LABELS[sim_tag] or tostring(sim_tag)
+        t.layout_mode = enum.layout_mode.MASTER
+        client:move_to_tag(sim_tag)
+        screen.active_workspace = sim_tag
+        client:raise()
+        client:focus()
+        return
+    end
 
     -- float-term: force float for custom command kitty windows
     if client.appid == "float-term" then
@@ -138,10 +201,27 @@ cwc.connect_signal("client::map", function(client)
 end)
 
 cwc.connect_signal("client::unmap", function(client)
+    if client.unmanaged then return end
+
+    -- clean up ephemeral sim tags when a sim window closes
+    local sim_tag = sim_tag_for(client)
+    if sim_tag then
+        local screen = client.screen
+        local viewing_this = screen.active_workspace == sim_tag
+
+        shrink_sim_tags(screen, client)
+
+        -- if we were viewing the now-empty tag, jump to the closest regular tag
+        if viewing_this and screen.max_general_workspace < sim_tag then
+            tag.history.restore(screen, 1)
+            if screen.active_workspace > DEFAULT_MAX_WORKSPACE then
+                screen.active_workspace = DEFAULT_MAX_WORKSPACE
+            end
+        end
+    end
+
     -- exit when the unmapped client is not the focused client.
     if client ~= cwc.client.focused() then return end
-    -- and for unmanaged client
-    if client.unmanaged then return end
 
     -- if the client container has more than one client then we focus just below the unmapped
     -- client
