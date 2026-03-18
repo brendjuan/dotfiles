@@ -7,7 +7,12 @@
     "height": 16,
     "modules-left": ["dwl/tags"],
     "modules-center": [],
-    "modules-right": ["custom/recording", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+    "modules-right": ["tray", "custom/recording", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+
+    "tray": {
+        "icon-size": 14,
+        "spacing": 6
+    },
 
     "custom/recording": {
         "exec": "if pgrep -x wf-recorder > /dev/null; then echo '󰑋 REC'; else echo ''; fi",
