@@ -70,6 +70,8 @@ ZSH_THEME="lambda"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
+zstyle :omz:plugins:ssh-agent identities id_ed25519_personal id_ed25519
+
 plugins=(git bazel bun colored-man-pages command-not-found cp debian dirhistory docker docker-compose emoji golang history kitty mise nomad pip podman python rsync rust ssh ssh-agent sudo systemd task tmux ubuntu uv)
 
 source $ZSH/oh-my-zsh.sh

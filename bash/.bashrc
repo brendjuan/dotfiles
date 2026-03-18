@@ -115,6 +115,12 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+# Start ssh-agent and add keys if not already running
+if [ -z "$SSH_AUTH_SOCK" ]; then
+    eval "$(ssh-agent -s)" > /dev/null
+    ssh-add ~/.ssh/id_ed25519_personal ~/.ssh/id_ed25519 2> /dev/null
+fi
+
 export PATH="$HOME/.local/bin:$PATH"
 . "$HOME/.cargo/env"
 
