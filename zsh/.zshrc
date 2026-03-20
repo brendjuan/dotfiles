@@ -128,3 +128,9 @@ source /opt/ros/jazzy/setup.zsh
 alias emacs="emacs -nw"
 export VISUAL="emacs -nw"
 export EDITOR="$VISUAL"
+
+# Gazebo performance: force OpenGL on integrated Intel GPUs
+if lspci 2>/dev/null | grep -qi 'VGA.*Intel' && ! lspci 2>/dev/null | grep -qi 'VGA.*NVIDIA\|VGA.*AMD.*Radeon'; then
+  export LIBGL_ALWAYS_SOFTWARE=0
+  export GZ_SIM_RENDER_ENGINE_GUI_API_BACKEND=opengl
+fi
