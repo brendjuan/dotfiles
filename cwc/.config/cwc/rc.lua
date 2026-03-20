@@ -204,20 +204,24 @@ cwc.connect_signal("client::unmap", function(client)
     if client.unmanaged then return end
 
     -- clean up ephemeral sim tags when a sim window closes
+    -- defer shrink so dwl-ipc broadcasts the empty tag state before
+    -- max_general_workspace is reduced (otherwise waybar never sees the update)
     local sim_tag = sim_tag_for(client)
     if sim_tag then
         local screen = client.screen
         local viewing_this = screen.active_workspace == sim_tag
 
-        shrink_sim_tags(screen, client)
+        cwc.timer.delayed_call(function()
+            shrink_sim_tags(screen, client)
 
-        -- if we were viewing the now-empty tag, jump to the closest regular tag
-        if viewing_this and screen.max_general_workspace < sim_tag then
-            tag.history.restore(screen, 1)
-            if screen.active_workspace > DEFAULT_MAX_WORKSPACE then
-                screen.active_workspace = DEFAULT_MAX_WORKSPACE
+            -- if we were viewing the now-empty tag, jump to the closest regular tag
+            if viewing_this and screen.max_general_workspace < sim_tag then
+                tag.history.restore(screen, 1)
+                if screen.active_workspace > DEFAULT_MAX_WORKSPACE then
+                    screen.active_workspace = DEFAULT_MAX_WORKSPACE
+                end
             end
-        end
+        end)
     end
 
     -- exit when the unmapped client is not the focused client.
