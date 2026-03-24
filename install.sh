@@ -48,6 +48,8 @@ git -C "$DOTFILES_DIR" checkout -- .
 echo "Applying config..."
 sed -i "s/{{WORK_GIT_NAME}}/$WORK_GIT_NAME/g; s/{{WORK_GIT_EMAIL}}/$WORK_GIT_EMAIL/g" "$DOTFILES_DIR/git/.gitconfig"
 sed -i "s/{{PERSONAL_GIT_NAME}}/$PERSONAL_GIT_NAME/g; s/{{PERSONAL_GIT_EMAIL}}/$PERSONAL_GIT_EMAIL/g" "$DOTFILES_DIR/git/.gitconfig-personal"
+sed -i "s|{{CYCLONEDDS_URI}}|$CYCLONEDDS_URI|g" "$DOTFILES_DIR/zsh/.zshrc"
+sed -i "s|{{CYCLONEDDS_URI}}|$CYCLONEDDS_URI|g" "$DOTFILES_DIR/bash/.bashrc"
 
 echo ""
 echo "Done! All packages stowed."

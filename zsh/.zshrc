@@ -138,7 +138,7 @@ if [ -d "$HOME/.local/share/pnpm" ]; then
   esac
 fi
 
-export CYCLONEDDS_URI="file:///home/bjax/Workspace/1/ros-docker/cyclonedds-dev.xml"
+export CYCLONEDDS_URI="{{CYCLONEDDS_URI}}"
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 source /opt/ros/jazzy/setup.zsh
