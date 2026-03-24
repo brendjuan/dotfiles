@@ -20,6 +20,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `mako`     | Mako notification daemon        |
 | `swaylock` | Swaylock screen locker          |
 | `cwc`      | CWC window compositor           |
+| `k4`       | `k4` script — launch kitty in a 2x2 grid |
 | `awesome`  | Awesome WM (overlay on [awesome-copycats](https://github.com/lcpz/awesome-copycats)) |
 
 The `awesome` package is optional — the install script will prompt before setting it up.
