@@ -118,8 +118,26 @@ export PATH="$HOME/.local/bin:$PATH"
 # Prepend hostname in blue to the prompt
 PROMPT="%{$fg[blue]%}%m%{$reset_color%} $PROMPT"
 
-export DEPOT_INSTALL_DIR="/home/bjax/.depot/bin"
-export PATH="$DEPOT_INSTALL_DIR:$PATH"
+# depot
+if [ -d "$HOME/.depot/bin" ]; then
+  export DEPOT_INSTALL_DIR="$HOME/.depot/bin"
+  export PATH="$DEPOT_INSTALL_DIR:$PATH"
+fi
+
+# mise
+if [ -x "$HOME/.local/bin/mise" ]; then
+  eval "$("$HOME/.local/bin/mise" activate zsh)"
+fi
+
+# pnpm
+if [ -d "$HOME/.local/share/pnpm" ]; then
+  export PNPM_HOME="$HOME/.local/share/pnpm"
+  case ":$PATH:" in
+    *":$PNPM_HOME:"*) ;;
+    *) export PATH="$PNPM_HOME:$PATH" ;;
+  esac
+fi
+
 export CYCLONEDDS_URI="file:///home/bjax/Workspace/1/ros-docker/cyclonedds-dev.xml"
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
