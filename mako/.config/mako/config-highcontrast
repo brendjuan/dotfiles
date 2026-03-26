@@ -1,0 +1,28 @@
+# mako notification daemon config
+# high contrast sunlight mode
+
+font=Hack Nerd Font 11
+background-color=#ffffff
+text-color=#000000
+border-color=#000000
+border-size=2
+border-radius=0
+padding=12
+margin=8
+width=320
+height=150
+default-timeout=5000
+max-visible=3
+layer=overlay
+anchor=top-right
+
+# suppress stray escape sequence notifications from Claude Code
+[app-name=kitty summary="4;0;"]
+invisible=1
+
+# urgent notifications
+[urgency=critical]
+background-color=#ffffff
+text-color=#cc0000
+border-color=#cc0000
+default-timeout=0
