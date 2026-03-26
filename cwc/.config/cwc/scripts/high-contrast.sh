@@ -7,6 +7,8 @@ CWC_DIR="$HOME/.config/cwc"
 KITTY_DIR="$HOME/.config/kitty"
 MAKO_DIR="$HOME/.config/mako"
 VSCODE_SETTINGS="$HOME/.config/Code/User/settings.json"
+WALLPAPER="$CWC_DIR/wallpaper.png"
+WALLPAPER_INVERTED="$CWC_DIR/wallpaper-inverted.png"
 
 enable_high_contrast() {
     touch "$STATE_FILE"
@@ -31,6 +33,14 @@ enable_high_contrast() {
     if [ -f "$VSCODE_SETTINGS" ]; then
         tmp=$(mktemp)
         jq '."workbench.colorTheme" = "Default High Contrast Light"' "$VSCODE_SETTINGS" > "$tmp" && mv "$tmp" "$VSCODE_SETTINGS"
+    fi
+
+    # wallpaper: invert colors and restart swaybg
+    if [ -f "$WALLPAPER" ]; then
+        convert "$WALLPAPER" -negate "$WALLPAPER_INVERTED"
+        killall swaybg 2>/dev/null
+        swaybg --output '*' --image "$WALLPAPER_INVERTED" --mode fill --color '#ffffff' &
+        disown
     fi
 
     # cwc borders: reload config so rc.lua picks up the state file
@@ -62,6 +72,12 @@ disable_high_contrast() {
         tmp=$(mktemp)
         jq 'del(."workbench.colorTheme")' "$VSCODE_SETTINGS" > "$tmp" && mv "$tmp" "$VSCODE_SETTINGS"
     fi
+
+    # wallpaper: restore original and restart swaybg
+    killall swaybg 2>/dev/null
+    swaybg --output '*' --image "$WALLPAPER" --mode fill --color '#0a000a' &
+    disown
+    rm -f "$WALLPAPER_INVERTED"
 
     notify-send "High Contrast" "OFF — glitchcore restored" -u low
 }
