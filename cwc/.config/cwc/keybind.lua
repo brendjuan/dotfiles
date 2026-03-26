@@ -467,6 +467,11 @@ end, { description = "clipboard history", group = "launcher" })
 kbd.bind({ MODKEY }, "b", function()
     cwc.spawn_with_shell("kill -s USR1 `pgrep waybar`")
 end, { description = "toggle waybar", group = "launcher" })
+kbd.bind({ MODKEY }, "F6", function()
+    cwc.spawn("~/.config/cwc/scripts/high-contrast.sh")
+    -- reload cwc config so border colors update
+    cwc.timer.new(0.5, function() cwc.reload() end, { one_shot = true })
+end, { description = "toggle high contrast mode", group = "launcher" })
 
 ------------------ MEDIA KEY -----------------------
 

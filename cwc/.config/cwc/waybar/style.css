@@ -49,6 +49,11 @@ window#waybar {
     background-color: rgba(0, 255, 204, 0.08);
 }
 
+#custom-highcontrast {
+    padding: 0 8px;
+    color: #00ffaa;
+}
+
 #custom-recording {
     padding: 0 8px;
     /* bleeding red - the eye is watching */

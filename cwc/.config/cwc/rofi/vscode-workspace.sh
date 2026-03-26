@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # pick a workspace dir and open vscode in it
 
-THEME="$HOME/.config/cwc/rofi/glitchcore.rasi"
+if [ -f "$HOME/.cache/high-contrast-mode" ]; then
+    THEME="$HOME/.config/cwc/rofi/highcontrast.rasi"
+else
+    THEME="$HOME/.config/cwc/rofi/glitchcore.rasi"
+fi
 WORKSPACE_DIR="$HOME/Workspace"
 
 [[ ! -d "$WORKSPACE_DIR" ]] && notify-send "vscode-workspace" "~/Workspace does not exist" && exit 1

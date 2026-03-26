@@ -3,7 +3,7 @@ set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_FILE="$DOTFILES_DIR/config.env"
-PACKAGES=(zsh bash git kitty mako swaylock cwc)
+PACKAGES=(zsh bash git kitty mako swaylock cwc vscode)
 
 # Check for stow
 if ! command -v stow &>/dev/null; then

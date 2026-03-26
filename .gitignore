@@ -20,6 +20,10 @@ config.env
 git/.gitconfig
 git/.gitconfig-personal
 
+# Runtime generated
+cwc/.config/cwc/waybar/style-active.css
+mako/.config/mako/config.bak
+
 # Stow internal
 .stow-local-ignore
 

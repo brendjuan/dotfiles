@@ -7,11 +7,18 @@
     "height": 16,
     "modules-left": ["dwl/tags"],
     "modules-center": [],
-    "modules-right": ["tray", "custom/recording", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
 
     "tray": {
         "icon-size": 14,
         "spacing": 6
+    },
+
+    "custom/highcontrast": {
+        "exec": "[ -f ~/.cache/high-contrast-mode ] && echo '󰌁' || echo '󱡓'",
+        "interval": 2,
+        "on-click": "~/.config/cwc/scripts/high-contrast.sh",
+        "tooltip": false
     },
 
     "custom/recording": {
