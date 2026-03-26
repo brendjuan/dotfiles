@@ -16,7 +16,9 @@ enable_high_contrast() {
     killall -SIGUSR2 waybar 2>/dev/null
 
     # kitty: push high contrast colors to all running instances
-    kitty @ --to unix:/tmp/kitty-socket set-colors --all "$KITTY_DIR/highcontrast.conf" 2>/dev/null
+    for sock in /tmp/kitty-*; do
+        [ -S "$sock" ] && kitty @ --to "unix:$sock" set-colors --all "$KITTY_DIR/highcontrast.conf" 2>/dev/null
+    done
 
     # mako: swap config and reload
     cp "$MAKO_DIR/config" "$MAKO_DIR/config.bak"
@@ -45,7 +47,9 @@ disable_high_contrast() {
     killall -SIGUSR2 waybar 2>/dev/null
 
     # kitty: restore default (just reset to config defaults)
-    kitty @ --to unix:/tmp/kitty-socket set-colors --all --reset 2>/dev/null
+    for sock in /tmp/kitty-*; do
+        [ -S "$sock" ] && kitty @ --to "unix:$sock" set-colors --all --reset 2>/dev/null
+    done
 
     # mako: restore original config
     if [ -f "$MAKO_DIR/config.bak" ]; then
