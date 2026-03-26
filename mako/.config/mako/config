@@ -1,10 +1,10 @@
 # mako notification daemon config
-# glitchcore aesthetic - CRT void energy
+# high contrast sunlight mode
 
 font=Hack Nerd Font 11
-background-color=#0a000aee
-text-color=#00ffaa
-border-color=#ff00ee
+background-color=#ffffff
+text-color=#000000
+border-color=#000000
 border-size=2
 border-radius=0
 padding=12
@@ -20,9 +20,9 @@ anchor=top-right
 [app-name=kitty summary="4;0;"]
 invisible=1
 
-# urgent notifications - blood red alert
+# urgent notifications
 [urgency=critical]
-background-color=#0a000aee
-text-color=#ff003c
-border-color=#ff003c
+background-color=#ffffff
+text-color=#cc0000
+border-color=#cc0000
 default-timeout=0
