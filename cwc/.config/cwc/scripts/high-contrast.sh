@@ -35,9 +35,9 @@ enable_high_contrast() {
         jq '."workbench.colorTheme" = "Default High Contrast Light"' "$VSCODE_SETTINGS" > "$tmp" && mv "$tmp" "$VSCODE_SETTINGS"
     fi
 
-    # wallpaper: invert colors and restart swaybg
+    # wallpaper: use cached inverted wallpaper, generate if missing
     if [ -f "$WALLPAPER" ]; then
-        convert "$WALLPAPER" -negate "$WALLPAPER_INVERTED"
+        [ -f "$WALLPAPER_INVERTED" ] || convert "$WALLPAPER" -negate "$WALLPAPER_INVERTED"
         killall swaybg 2>/dev/null
         swaybg --output '*' --image "$WALLPAPER_INVERTED" --mode fill --color '#ffffff' &
         disown
@@ -77,7 +77,6 @@ disable_high_contrast() {
     killall swaybg 2>/dev/null
     swaybg --output '*' --image "$WALLPAPER" --mode fill --color '#0a000a' &
     disown
-    rm -f "$WALLPAPER_INVERTED"
 
     notify-send "High Contrast" "OFF — glitchcore restored" -u low
 }

@@ -419,4 +419,9 @@ convert "$tmp/noisy.png" "$tmp/vignette.png" \
     -compose Multiply -composite \
     "$OUT"
 
+# pre-generate inverted version for high contrast toggle
+INVERTED="${OUT%.png}-inverted.png"
+convert "$OUT" -negate "$INVERTED"
+
 echo "glitched wallpaper written to $OUT"
+echo "inverted wallpaper written to $INVERTED"
