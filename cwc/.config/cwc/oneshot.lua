@@ -9,7 +9,7 @@ cwc.plugin.load(plugins_folder .. "/flayout.so")
 cwc.plugin.load(plugins_folder .. "/dwl-ipc.so")
 
 -- autostart app
-cwc.spawn_with_shell("swaybg --output '*' --image ~/.config/cwc/wallpaper.png --mode fill --color '#0a000a'")
+cwc.spawn_with_shell("swaybg --output '*' --image ~/.config/cwc/wallpaper.png --mode fill --color '#020008'")
 -- seed active waybar style if it doesn't exist (first boot or stow refresh)
 cwc.spawn_with_shell("[ -f ~/.config/cwc/waybar/style-active.css ] || cp ~/.config/cwc/waybar/style.css ~/.config/cwc/waybar/style-active.css")
 cwc.spawn_with_shell("waybar -c ~/.config/cwc/waybar/config.jsonc -s ~/.config/cwc/waybar/style-active.css")

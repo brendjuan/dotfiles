@@ -75,7 +75,7 @@ disable_high_contrast() {
 
     # wallpaper: restore original and restart swaybg
     killall swaybg 2>/dev/null
-    swaybg --output '*' --image "$WALLPAPER" --mode fill --color '#0a000a' &
+    swaybg --output '*' --image "$WALLPAPER" --mode fill --color '#020008' &
     disown
 
     notify-send "High Contrast" "OFF — glitchcore restored" -u low

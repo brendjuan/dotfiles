@@ -1,5 +1,5 @@
-/* WAYBAR 9000 - cursed glitchcore edition */
-/* matches the swaglock energy - do NOT question the colors */
+/* WAYBAR 9000 v3.0 - TOP SECRET FISH INTELLIGENCE EDITION */
+/* PROPERTY OF DEEPWATER INTELLIGENCE BUREAU - do NOT question the colors */
 
 * {
     font-family: "Hack Nerd Font", monospace;
@@ -8,9 +8,9 @@
 }
 
 window#waybar {
-    /* translucent void - like a monitor that's been punched once */
-    background-color: rgba(10, 0, 10, 0.88);
-    color: #00ffaa;
+    /* classified void - deep ocean darkness */
+    background-color: rgba(2, 0, 8, 0.92);
+    color: #00ffb4;
 }
 
 #tags button {
@@ -18,103 +18,102 @@ window#waybar {
     margin: 0;
     border: none;
     border-radius: 0;
-    /* ghosted out - forgotten tags in the void */
-    color: rgba(50, 255, 10, 0.27);
+    /* ghosted out - lost signal in the deep */
+    color: rgba(0, 255, 180, 0.22);
     background: transparent;
     font-size: 12px;
     font-weight: bold;
 }
 
 #tags button.occupied {
-    /* something lives here - sickly green glow */
-    color: rgba(50, 255, 10, 0.67);
+    /* something lives here - sonar contact */
+    color: rgba(0, 255, 180, 0.60);
 }
 
 #tags button.focused {
-    /* ACTIVE - magenta ring energy from the swaglock */
-    color: #ff00ee;
-    background-color: rgba(255, 0, 238, 0.12);
-    border-bottom: 2px solid #ff00ee;
+    /* ACTIVE - teal lock ring energy, red classification underline */
+    color: #00ffb4;
+    background-color: rgba(0, 255, 180, 0.08);
+    border-bottom: 2px solid #ff0050;
 }
 
 #tags button.urgent {
-    /* emotional damage - same red shame as wrong password */
-    color: #ff003c;
-    background-color: rgba(255, 0, 60, 0.1);
+    /* SECURITY BREACH - classification red */
+    color: #ff0050;
+    background-color: rgba(255, 0, 80, 0.1);
 }
 
 #tags button:hover {
-    /* CRT phosphor burn on hover */
-    color: #00ffcc;
-    background-color: rgba(0, 255, 204, 0.08);
+    /* sonar ping on hover */
+    color: #00ffd0;
+    background-color: rgba(0, 255, 200, 0.06);
 }
 
 #custom-highcontrast {
     padding: 0 8px;
-    color: #00ffaa;
+    color: #00ffb4;
 }
 
 #custom-recording {
     padding: 0 8px;
     /* bleeding red - the eye is watching */
-    color: #ff003c;
+    color: #ff0050;
     font-weight: bold;
 }
 
 #window {
     padding: 0 8px;
-    color: #ff00ee;
+    color: #ff0050;
     font-size: 11px;
     /* first module on the right - no left divider needed */
 }
 
 #backlight {
     padding: 0 8px;
-    color: #ff00ee;
-    /* screen glow leaking through the void */
-    border-left: 1px solid rgba(255, 0, 238, 0.3);
+    color: #00ffb4;
+    /* teal scanline separators - sonar grid bleeds between segments */
+    border-left: 1px solid rgba(0, 255, 180, 0.20);
 }
 
 #cpu {
     padding: 0 8px;
-    color: #ff00ee;
-    /* scanline separators - the CRT bleeds between segments */
-    border-left: 1px solid rgba(255, 0, 238, 0.3);
+    color: #00ffb4;
+    border-left: 1px solid rgba(0, 255, 180, 0.20);
 }
 
 #memory {
     padding: 0 8px;
-    color: #ff00ee;
-    border-left: 1px solid rgba(255, 0, 238, 0.3);
+    color: #00ffb4;
+    border-left: 1px solid rgba(0, 255, 180, 0.20);
 }
 
 #pulseaudio {
     padding: 0 8px;
-    color: #ff00ee;
-    border-left: 1px solid rgba(255, 0, 238, 0.3);
+    color: #00ffb4;
+    border-left: 1px solid rgba(0, 255, 180, 0.20);
 }
 
 #pulseaudio.muted {
-    color: rgba(50, 255, 10, 0.27);
+    color: rgba(0, 255, 180, 0.22);
 }
 
 #battery {
     padding: 0 8px;
-    color: #ff00ee;
-    border-left: 1px solid rgba(255, 0, 238, 0.3);
+    color: #00ffb4;
+    border-left: 1px solid rgba(0, 255, 180, 0.20);
 }
 
 #battery.warning {
-    color: #ffcc00;
+    color: #ff5500;
 }
 
 #battery.critical {
-    color: #ff003c;
+    color: #ff0050;
 }
 
 #clock {
     padding: 0 8px;
-    /* time is a magenta construct */
-    color: #ff00ee;
-    border-left: 1px solid rgba(255, 0, 238, 0.3);
+    /* time is a classified construct */
+    color: #ff0050;
+    border-left: 1px solid rgba(0, 255, 180, 0.20);
 }

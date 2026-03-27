@@ -29,11 +29,11 @@ Configuration for **cwc** (cwcwm), a Wayland compositor with Lua scripting. This
 The vibe is **meme-y, sketchy glitchcore** — intentionally unhinged CRT-aesthetic energy. Code comments, waybar config, and CSS should match this tone (irreverent, self-aware, slightly chaotic). New UI elements must stay on-brand.
 
 Consistent palette across rofi, waybar, and swaylock:
-- Background: `rgba(10, 0, 10, ~0.9)` (near-black purple void)
-- Primary: `#00ffaa` (toxic green)
-- Accent: `#ff00ee` (magenta)
-- Urgent/error: `#ff003c` (red)
-- Dim/ghost: `rgba(50, 255, 10, 0.27)`
+- Background: `rgba(2, 0, 8, ~0.92)` (near-black blue void)
+- Primary: `#00ffb4` (teal/cyan)
+- Accent/urgent: `#ff0050` (classification red)
+- Dim/ghost: `rgba(0, 255, 180, 0.22)`
+- Warning: `#ff5500` (amber)
 - Font: Hack Nerd Font
 - Katakana tag labels in waybar (ア イ ウ エ オ カ キ ク ケ)
 

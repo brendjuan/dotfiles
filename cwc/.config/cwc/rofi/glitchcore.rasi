@@ -1,18 +1,18 @@
-/* glitchcore rofi - matches the swaglock/waybar void energy */
+/* glitchcore rofi v3.0 - TOP SECRET FISH INTELLIGENCE EDITION */
 
 * {
     font: "Hack Nerd Font 11";
 
-    bg:             rgba(10, 0, 10, 0.92);
-    bg-alt:         rgba(20, 0, 20, 0.95);
-    fg:             #00ffaa;
-    fg-dim:         rgba(50, 255, 10, 0.40);
-    accent:         #ff00ee;
-    accent-bg:      rgba(255, 0, 238, 0.12);
-    urgent:         #ff003c;
-    selected-fg:    #ff00ee;
-    selected-bg:    rgba(255, 0, 238, 0.15);
-    border-color:   #ff00ee;
+    bg:             rgba(2, 0, 8, 0.94);
+    bg-alt:         rgba(4, 0, 12, 0.96);
+    fg:             #00ffb4;
+    fg-dim:         rgba(0, 255, 180, 0.30);
+    accent:         #ff0050;
+    accent-bg:      rgba(255, 0, 80, 0.10);
+    urgent:         #ff0050;
+    selected-fg:    #00ffb4;
+    selected-bg:    rgba(0, 255, 180, 0.10);
+    border-color:   #ff0050;
 
     background-color: transparent;
     text-color:       @fg;
@@ -36,7 +36,7 @@ inputbar {
     background-color: @bg-alt;
     padding:          8px 12px;
     border:           0 0 1px 0;
-    border-color:     rgba(255, 0, 238, 0.30);
+    border-color:     rgba(255, 0, 80, 0.30);
     children:         [ prompt, entry ];
 }
 
@@ -82,7 +82,7 @@ element selected.normal {
 }
 
 element selected.urgent {
-    background-color: rgba(255, 0, 60, 0.15);
+    background-color: rgba(255, 0, 80, 0.15);
     text-color:       @urgent;
 }
 
