@@ -15,7 +15,24 @@ local crules = require("cuteful.rules")
 local cwc = cwc
 
 -- config.init should go first before anything else
-config.init(require("conf"))
+local conf = require("conf")
+
+-- high contrast mode: override border colors when state file exists
+local function file_exists(path)
+    local f = io.open(path, "r")
+    if f then f:close() return true end
+    return false
+end
+
+if file_exists(os.getenv("HOME") .. "/.cache/high-contrast-mode") then
+    conf.border_color_focus  = gears.color("#000000")
+    conf.border_color_normal = gears.color("#666666")
+    conf.border_color_raised = gears.color("#000000")
+    conf.border_width        = 3
+    conf.useless_gaps        = 0
+end
+
+config.init(conf)
 
 -- execute oneshot.lua once, cwc.is_startup() mark that the configuration is loaded for the first time
 if cwc.is_startup() then

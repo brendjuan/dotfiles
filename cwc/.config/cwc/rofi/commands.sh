@@ -2,13 +2,18 @@
 # custom command menu — rofi but make it useful
 # add entries as "label|command" lines
 
-THEME="$HOME/.config/cwc/rofi/glitchcore.rasi"
+if [ -f "$HOME/.cache/high-contrast-mode" ]; then
+    THEME="$HOME/.config/cwc/rofi/highcontrast.rasi"
+else
+    THEME="$HOME/.config/cwc/rofi/glitchcore.rasi"
+fi
 ROFI_OPTS=(-theme "$THEME" -normal-window -steal-focus -i)
 
 declare -A commands=(
     ["󰤥 Network (nmtui)"]="kitty --class float-term -e nmtui"
     ["󱒈 Workspace Grid"]="__workspace_grid"
     ["󰨞 VSCode Workspace"]="~/.config/cwc/rofi/vscode-workspace.sh"
+    ["󰌁 High Contrast Toggle"]="~/.config/cwc/scripts/high-contrast.sh"
 )
 
 chosen=$(printf '%s\n' "${!commands[@]}" | rofi -dmenu -p "cmd" "${ROFI_OPTS[@]}")

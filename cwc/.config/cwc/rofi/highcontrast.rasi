@@ -1,0 +1,96 @@
+/* high contrast rofi - sunlight readability mode */
+
+* {
+    font: "Hack Nerd Font 11";
+
+    bg:             #ffffff;
+    bg-alt:         #f0f0f0;
+    fg:             #000000;
+    fg-dim:         #666666;
+    accent:         #0000cc;
+    accent-bg:      #ddddff;
+    urgent:         #cc0000;
+    selected-fg:    #000000;
+    selected-bg:    #dddddd;
+    border-color:   #000000;
+
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+window {
+    width:            380px;
+    background-color: @bg;
+    border:           2px solid;
+    border-color:     @border-color;
+    border-radius:    0px;
+    padding:          0;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    spacing: 0;
+}
+
+inputbar {
+    background-color: @bg-alt;
+    padding:          8px 12px;
+    border:           0 0 2px 0;
+    border-color:     #000000;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    text-color: @accent;
+    margin:     0 8px 0 0;
+}
+
+entry {
+    text-color:       @fg;
+    placeholder:      "...";
+    placeholder-color: @fg-dim;
+}
+
+listview {
+    lines:            12;
+    fixed-height:     false;
+    padding:          4px 0;
+    scrollbar:        false;
+}
+
+element {
+    padding:          4px 12px;
+}
+
+element normal.normal {
+    text-color: @fg;
+}
+
+element normal.urgent {
+    text-color: @urgent;
+}
+
+element alternate.normal {
+    text-color: @fg;
+}
+
+element selected.normal {
+    background-color: @selected-bg;
+    text-color:       @selected-fg;
+    border:           0 0 0 2px solid;
+    border-color:     @accent;
+}
+
+element selected.urgent {
+    background-color: #ffdddd;
+    text-color:       @urgent;
+}
+
+element-icon {
+    size: 16px;
+    margin: 0 8px 0 0;
+}
+
+element-text {
+    vertical-align: 0.5;
+}

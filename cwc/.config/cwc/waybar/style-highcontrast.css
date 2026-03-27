@@ -1,0 +1,110 @@
+/* WAYBAR 9000 - high contrast sunlight mode */
+/* black on white, no transparency, maximum readability */
+
+* {
+    font-family: "Hack Nerd Font", monospace;
+    font-size: 10px;
+    min-height: 0;
+}
+
+window#waybar {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+#tags button {
+    padding: 0 5px;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    color: #999999;
+    background: transparent;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+#tags button.occupied {
+    color: #333333;
+}
+
+#tags button.focused {
+    color: #000000;
+    background-color: #dddddd;
+    border-bottom: 2px solid #000000;
+}
+
+#tags button.urgent {
+    color: #cc0000;
+    background-color: #ffdddd;
+}
+
+#tags button:hover {
+    color: #000000;
+    background-color: #eeeeee;
+}
+
+#custom-recording {
+    padding: 0 8px;
+    color: #cc0000;
+    font-weight: bold;
+}
+
+#custom-highcontrast {
+    padding: 0 8px;
+    color: #000000;
+    font-weight: bold;
+}
+
+#window {
+    padding: 0 8px;
+    color: #0000cc;
+    font-size: 11px;
+}
+
+#backlight {
+    padding: 0 8px;
+    color: #000000;
+    border-left: 1px solid #cccccc;
+}
+
+#cpu {
+    padding: 0 8px;
+    color: #000000;
+    border-left: 1px solid #cccccc;
+}
+
+#memory {
+    padding: 0 8px;
+    color: #000000;
+    border-left: 1px solid #cccccc;
+}
+
+#pulseaudio {
+    padding: 0 8px;
+    color: #000000;
+    border-left: 1px solid #cccccc;
+}
+
+#pulseaudio.muted {
+    color: #999999;
+}
+
+#battery {
+    padding: 0 8px;
+    color: #000000;
+    border-left: 1px solid #cccccc;
+}
+
+#battery.warning {
+    color: #cc8800;
+}
+
+#battery.critical {
+    color: #cc0000;
+}
+
+#clock {
+    padding: 0 8px;
+    color: #000000;
+    border-left: 1px solid #cccccc;
+}
