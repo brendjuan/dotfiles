@@ -38,13 +38,10 @@ for pkg in "${PACKAGES[@]}"; do
         # Find all target files/dirs this package would create in $HOME
         while IFS= read -r rel_path; do
             target="$HOME/$rel_path"
-            if [ -e "$target" ] && [ ! -L "$target" ]; then
+            if [ -e "$target" ] || [ -L "$target" ]; then
                 mkdir -p "$BACKUP_DIR/$(dirname "$rel_path")"
-                if [ -d "$target" ]; then
-                    cp -r "$target" "$BACKUP_DIR/${rel_path}.bak"
-                else
-                    cp "$target" "$BACKUP_DIR/${rel_path}.bak"
-                fi
+                # Dereference symlinks so backups are always real files
+                cp -rL "$target" "$BACKUP_DIR/$rel_path"
                 echo "  backed up: ~/$rel_path"
                 backed_up=1
             fi
@@ -95,6 +92,16 @@ if [[ "${awesome_answer,,}" == "y" ]]; then
     else
         echo "awesome-copycats already cloned, skipping."
     fi
+
+    # Back up awesome files that stow will overwrite
+    while IFS= read -r rel_path; do
+        target="$HOME/$rel_path"
+        if [ -e "$target" ] || [ -L "$target" ]; then
+            mkdir -p "$BACKUP_DIR/$(dirname "$rel_path")"
+            cp -rL "$target" "$BACKUP_DIR/$rel_path"
+            echo "  backed up: ~/$rel_path"
+        fi
+    done < <(cd "$DOTFILES_DIR/awesome" && find . -type f | sed 's|^\./||')
 
     # Stow our customizations on top of the cloned repo
     echo "  -> awesome (overlay)"

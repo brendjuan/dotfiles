@@ -52,30 +52,30 @@ fi
 
 # Restore each backed-up file
 restored=0
-while IFS= read -r bak_file; do
-    rel_path="${bak_file#"$BACKUP_DIR"/}"
-    # Strip the .bak suffix
-    target="$HOME/${rel_path%.bak}"
+while IFS= read -r backed_file; do
+    rel_path="${backed_file#"$BACKUP_DIR"/}"
+    target="$HOME/$rel_path"
     target_dir=$(dirname "$target")
 
     mkdir -p "$target_dir"
 
+    # Remove symlink if present so we can replace it with the real file
     if [ -L "$target" ]; then
         rm "$target"
     fi
 
-    if [ -d "$bak_file" ]; then
-        cp -r "$bak_file" "$target"
+    if [ -d "$backed_file" ]; then
+        cp -r "$backed_file" "$target"
     else
-        cp "$bak_file" "$target"
+        cp "$backed_file" "$target"
     fi
-    echo "  restored: ~/${rel_path%.bak}"
+    echo "  restored: ~/$rel_path"
     restored=1
-done < <(find "$BACKUP_DIR" -name "*.bak" -print)
+done < <(find "$BACKUP_DIR" -type f -print)
 
 if [ "$restored" -eq 1 ]; then
     echo ""
     echo "Done! Files restored from backup."
 else
-    echo "No .bak files found in that backup."
+    echo "No files found in that backup."
 fi
