@@ -24,6 +24,9 @@ git/.gitconfig-personal
 cwc/.config/cwc/waybar/style-active.css
 mako/.config/mako/config.bak
 
+# Backups from install.sh
+backups/
+
 # Stow internal
 .stow-local-ignore
 

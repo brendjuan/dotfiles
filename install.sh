@@ -27,6 +27,39 @@ if [ ! -f "$LOCKSCREEN" ]; then
     ln -s lockscreen.png.example "$LOCKSCREEN"
 fi
 
+echo "Backing up existing files that would be overwritten..."
+
+BACKUP_TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+BACKUP_DIR="$DOTFILES_DIR/backups/$BACKUP_TIMESTAMP"
+backed_up=0
+
+for pkg in "${PACKAGES[@]}"; do
+    if [ -d "$DOTFILES_DIR/$pkg" ]; then
+        # Find all target files/dirs this package would create in $HOME
+        while IFS= read -r rel_path; do
+            target="$HOME/$rel_path"
+            if [ -e "$target" ] && [ ! -L "$target" ]; then
+                mkdir -p "$BACKUP_DIR/$(dirname "$rel_path")"
+                if [ -d "$target" ]; then
+                    cp -r "$target" "$BACKUP_DIR/${rel_path}.bak"
+                else
+                    cp "$target" "$BACKUP_DIR/${rel_path}.bak"
+                fi
+                echo "  backed up: ~/$rel_path"
+                backed_up=1
+            fi
+        done < <(cd "$DOTFILES_DIR/$pkg" && find . -type f | sed 's|^\./||')
+    fi
+done
+
+if [ "$backed_up" -eq 1 ]; then
+    echo "Backups saved to: $BACKUP_DIR"
+else
+    echo "  (no existing files to back up)"
+    rmdir "$BACKUP_DIR" 2>/dev/null || true
+fi
+
+echo ""
 echo "Stowing dotfiles from $DOTFILES_DIR"
 
 for pkg in "${PACKAGES[@]}"; do
