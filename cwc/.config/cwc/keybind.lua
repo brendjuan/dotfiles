@@ -444,11 +444,11 @@ kbd.bind({ MODKEY }, "F1", function()
 end, { description = "open a web browser", group = "launcher" })
 kbd.bind(MODKEY, "r", function()
     cwc.spawn_with_shell(
-        'rofi -show drun -icon-theme "Papirus-dark" -show-icons -normal-window -steal-focus'
+        'sleep 0.05 && rofi -show drun -icon-theme "Papirus-dark" -show-icons -normal-window -steal-focus'
         .. ' -theme ~/.config/cwc/rofi/glitchcore.rasi')
 end, { description = "application launcher", group = "launcher" })
 kbd.bind(MODKEY, "c", function()
-    cwc.spawn_with_shell('~/.config/cwc/rofi/commands.sh')
+    cwc.spawn_with_shell('sleep 0.05 && ~/.config/cwc/rofi/commands.sh')
 end, { description = "custom commands menu", group = "launcher" })
 
 ------------------- utility
