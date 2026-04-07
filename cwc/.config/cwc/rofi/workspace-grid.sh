@@ -10,7 +10,7 @@ kitty --session - <<EOF
 layout grid
 cd $DIR
 launch
-launch --cwd $DIR/deployment bash -c "task ping -- --scan; exec bash"
+launch --cwd $DIR/deployment zsh -ic "task ping -- --scan; exec bash"
 launch
 launch
 EOF
