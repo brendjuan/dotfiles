@@ -23,8 +23,10 @@ chosen=$(printf '%s\n' "${!commands[@]}" | rofi -dmenu -p "cmd" "${ROFI_OPTS[@]}
 cmd="${commands[$chosen]}"
 
 if [[ "$cmd" == "__workspace_grid" ]]; then
-    dirs=$(find "$HOME/Workspace" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
-    [[ -z "$dirs" ]] && notify-send "workspace-grid" "No directories in ~/Workspace" && exit 1
+    SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+    WS_DIR=$("$SCRIPT_DIR/find-workspace-dir.sh") || { notify-send "workspace-grid" "No ~/Workspace(s) directory found"; exit 1; }
+    dirs=$(find "$WS_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
+    [[ -z "$dirs" ]] && notify-send "workspace-grid" "No directories in $WS_DIR" && exit 1
     chosen_dir=$(printf '%s\n' "$dirs" | rofi -dmenu -p "workspace" "${ROFI_OPTS[@]}")
     [[ -z "$chosen_dir" ]] && exit 0
     exec ~/.config/cwc/rofi/workspace-grid.sh "$chosen_dir"
