@@ -55,6 +55,23 @@ window#waybar {
     font-weight: bold;
 }
 
+#taskbar button {
+    padding: 0 3px;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+}
+
+#taskbar button:hover {
+    background-color: #eeeeee;
+}
+
+#taskbar button.active {
+    background-color: #dddddd;
+    border-bottom: 2px solid #000000;
+}
+
 #window {
     padding: 0 8px;
     color: #0000cc;

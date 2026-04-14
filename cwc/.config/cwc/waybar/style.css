@@ -61,6 +61,25 @@ window#waybar {
     font-weight: bold;
 }
 
+#taskbar button {
+    padding: 0 3px;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+}
+
+#taskbar button:hover {
+    /* sonar pulse on hover */
+    background-color: rgba(0, 255, 180, 0.10);
+}
+
+#taskbar button.active {
+    /* locked on - this one has your attention */
+    background-color: rgba(0, 255, 180, 0.08);
+    border-bottom: 2px solid #ff0050;
+}
+
 #window {
     padding: 0 8px;
     color: #ff0050;

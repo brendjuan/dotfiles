@@ -152,3 +152,11 @@ if lspci 2>/dev/null | grep -qi 'VGA.*Intel' && ! lspci 2>/dev/null | grep -qi '
   export LIBGL_ALWAYS_SOFTWARE=0
   export GZ_SIM_RENDER_ENGINE_GUI_API_BACKEND=opengl
 fi
+
+# pnpm
+export PNPM_HOME="/home/bjax/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

@@ -6,7 +6,7 @@
     "position": "top",
     "height": 16,
     "modules-left": ["dwl/tags"],
-    "modules-center": [],
+    "modules-center": ["wlr/taskbar"],
     "modules-right": ["tray", "custom/highcontrast", "custom/recording", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
 
     "tray": {
@@ -26,6 +26,15 @@
         "interval": 2,
         "on-click": "pkill -INT wf-recorder || true",
         "tooltip": false
+    },
+
+    "wlr/taskbar": {
+        "format": "{icon}",
+        "icon-size": 12,
+        "on-click": "activate",
+        "on-click-middle": "close",
+        "tooltip-format": "{title}",
+        "all-outputs": false
     },
 
     "dwl/tags": {
