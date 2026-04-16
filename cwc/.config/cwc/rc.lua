@@ -43,6 +43,9 @@ end
 gears.protected_call(require, "keybind")
 gears.protected_call(require, "mousebind")
 
+-- battery watchdog: urgent mako at <10%, pulsing red edges at <5%
+gears.protected_call(require, "battery")
+
 -- use core implementation
 impl.use_core()
 
