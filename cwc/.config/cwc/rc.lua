@@ -64,22 +64,42 @@ cwc.connect_signal("input::new", function(dev)
 end)
 
 ------------------------------- SCREEN SETUP ------------------------------------
+-- Layout (from wlr-randr):
+--   [ eDP-1 laptop ][ DP-3 landscape ][ DP-4 portrait ]
+--         2560x1600      2560x1440        1440x2560 (rotated 270°)
+-- Matches on screen.name: the two H27T27 externals have identical EDIDs (same
+-- make/model, no serial), so description can't distinguish landscape vs
+-- portrait — port name is the only stable discriminator. If you re-cable
+-- DP-3/DP-4, swap the port checks below.
+-- Positions MUST be non-negative (Cudiph/cwcwm#49).
 cwc.connect_signal("screen::new", function(screen)
-    -- screen settings
-    if screen.name == "DP-1" then
-        screen:set_position(0, 0)       -- NOTE: Position(s) MUST be non-negative - based on #49 (https://github.com/Cudiph/cwcwm/issues/49).
-
-        screen:set_mode(1920, 1080, 60) -- width, height, refresh rate
-        screen:set_adaptive_sync(true)
-        screen:set_scale(1.2)
+    -- Laptop internal panel: BOE NE180QDM-NZ2, max 2560x1600 @ 240Hz
+    if screen.name == "eDP-1" then
+        screen:set_mode(2560, 1600, 240)
+        screen:set_scale(1.0)
         screen:set_transform(enum.output_transform.TRANSFORM_NORMAL)
+        screen:set_adaptive_sync(true)
+        screen:set_position(0, 417)
+    end
 
-        -- by default the screen is not allowed to tear
+    -- Primary external (landscape): SKG H27T27, max 2560x1440 @ 60Hz
+    if screen.name == "DP-3" then
+        screen:set_mode(2560, 1440, 100) -- actually ~99.965 Hz; cwc ±2 Hz fuzzy matches
+        screen:set_scale(1.0)
+        screen:set_transform(enum.output_transform.TRANSFORM_NORMAL)
+        screen:set_adaptive_sync(false)
+        screen:set_position(2560, 417)
         screen.allow_tearing = true
     end
 
-    if screen.name == "DP-2" then
-        screen:set_position(1920, 0)
+    -- Secondary external (portrait, rotated 270°): SKG H27T27, max 2560x1440 @ 60Hz
+    -- Rotated → effective logical size 1440x2560.
+    if screen.name == "DP-4" then
+        screen:set_mode(2560, 1440, 100) -- actually ~99.965 Hz; cwc ±2 Hz fuzzy matches
+        screen:set_scale(1.0)
+        screen:set_transform(enum.output_transform.TRANSFORM_270)
+        screen:set_adaptive_sync(false)
+        screen:set_position(5120, 0)
     end
 
     -- don't apply if restored since it will reset whats manually changed
