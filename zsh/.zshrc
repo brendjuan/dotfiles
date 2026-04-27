@@ -153,6 +153,15 @@ if lspci 2>/dev/null | grep -qi 'VGA.*Intel' && ! lspci 2>/dev/null | grep -qi '
   export GZ_SIM_RENDER_ENGINE_GUI_API_BACKEND=opengl
 fi
 
+# Gazebo performance: route GL/EGL to the discrete GPU via PRIME render offload
+if lspci 2>/dev/null | grep -qi 'VGA.*NVIDIA'; then
+  export __NV_PRIME_RENDER_OFFLOAD=1
+  export __GLX_VENDOR_LIBRARY_NAME=nvidia
+  export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
+elif lspci 2>/dev/null | grep -qi 'VGA.*AMD.*Radeon'; then
+  export DRI_PRIME=1
+fi
+
 # pnpm
 export PNPM_HOME="/home/bjax/.local/share/pnpm"
 case ":$PATH:" in

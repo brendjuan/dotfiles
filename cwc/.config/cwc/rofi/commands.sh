@@ -8,6 +8,7 @@ else
     THEME="$HOME/.config/cwc/rofi/glitchcore.rasi"
 fi
 ROFI_OPTS=(-theme "$THEME" -normal-window -steal-focus -i)
+ROFI_MARKUP_OPTS=("${ROFI_OPTS[@]}" -markup-rows)
 
 declare -A commands=(
     ["󰤥 Network (nmtui)"]="kitty --class float-term -e nmtui"
@@ -25,11 +26,11 @@ cmd="${commands[$chosen]}"
 if [[ "$cmd" == "__workspace_grid" ]]; then
     SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
     WS_DIR=$("$SCRIPT_DIR/find-workspace-dir.sh") || { notify-send "workspace-grid" "No ~/Workspace(s) directory found"; exit 1; }
-    dirs=$(find "$WS_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
+    dirs=$("$SCRIPT_DIR/list-workspaces.sh" "$WS_DIR")
     [[ -z "$dirs" ]] && notify-send "workspace-grid" "No directories in $WS_DIR" && exit 1
-    chosen_dir=$(printf '%s\n' "$dirs" | rofi -dmenu -p "workspace" "${ROFI_OPTS[@]}")
-    [[ -z "$chosen_dir" ]] && exit 0
-    exec ~/.config/cwc/rofi/workspace-grid.sh "$chosen_dir"
+    chosen=$(printf '%s\n' "$dirs" | rofi -dmenu -p "workspace" "${ROFI_MARKUP_OPTS[@]}")
+    [[ -z "$chosen" ]] && exit 0
+    exec ~/.config/cwc/rofi/workspace-grid.sh "$("$SCRIPT_DIR/list-workspaces.sh" strip "$chosen")"
 fi
 
 exec $cmd
