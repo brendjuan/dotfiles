@@ -57,11 +57,15 @@ local function notify(summary, body, urgency, timeout_ms)
     cwc.spawn_with_shell(cmd)
 end
 
--- kill any existing overlay of a given script by name, optionally respawn
+-- kill any existing overlay of a given script by name, optionally respawn.
+-- the `trap '' TERM` dance is load-bearing: pkill -f matches against the
+-- launching shell's own cmdline (which contains the script name as an
+-- argument to pkill), so without the trap the shell SIGTERMs itself and
+-- dies before ever reaching the spawn.
 local function respawn(match, script, args)
     if args then
         cwc.spawn_with_shell(string.format(
-            "pkill -f %s; %s %s >/dev/null 2>&1 &",
+            "trap '' TERM; pkill -f %s; trap - TERM; %s %s >/dev/null 2>&1 &",
             shq(match), shq(script), args))
     else
         cwc.spawn_with_shell(string.format("pkill -f %s", shq(match)))
