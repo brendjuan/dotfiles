@@ -335,17 +335,15 @@ for i = 1, 9 do
     end, { description = "toggle focused client on tag #" .. i_str, group = "tag" })
 end
 
+local sim_toggle_next = 10
 kbd.bind(MODKEY, "0", function()
     local s = cwc.screen.focused()
-    local ws = s.active_workspace
-    if ws == 10 then
-        s:get_tag(11):view_only()
-    elseif ws == 11 then
-        s:get_tag(10):view_only()
-    else
-        s:get_tag(10):view_only()
+    if s.max_general_workspace < sim_toggle_next then
+        s.max_general_workspace = sim_toggle_next
     end
-end, { description = "jump to / toggle between sim tags (GZ/RV)", group = "tag" })
+    s:get_tag(sim_toggle_next):view_only()
+    sim_toggle_next = (sim_toggle_next == 10) and 11 or 10
+end, { description = "toggle between sim tags (GZ/RV)", group = "tag" })
 
 kbd.bind({ MODKEY, mod.SHIFT }, "0", function()
     local scrs = cwc.screen.get()
