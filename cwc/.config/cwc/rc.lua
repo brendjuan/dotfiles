@@ -138,17 +138,14 @@ local SIM_TAG_LABELS = {
 
 --- Return the sim tag index for a client, or nil if not a sim window.
 local function sim_tag_for(client)
-    local aid   = (client.appid or ""):lower()
-    local title = (client.title or ""):lower()
+    local aid = (client.appid or ""):lower()
 
-    -- gz-sim, gzclient, gazebo, etc.
-    if aid:match("gz") or aid:match("gazebo") or title:match("gazebo") then
-        return SIM_TAGS.gazebo
-    end
-
-    -- rviz2, rviz, RViz, etc.
-    if aid:match("rviz") or title:match("rviz") then
+    -- check rviz first; its title contains the .rviz config path which
+    -- often includes "gazebo" (e.g. ghostfin_gazebo/config/ghostfin.rviz)
+    if aid:match("rviz") then
         return SIM_TAGS.rviz
+    elseif aid:match("gz") or aid:match("gazebo") then
+        return SIM_TAGS.gazebo
     end
 end
 
