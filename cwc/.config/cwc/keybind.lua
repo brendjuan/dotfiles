@@ -449,6 +449,55 @@ kbd.bind(MODKEY, "c", function()
     cwc.spawn_with_shell('pkill rofi; sleep 0.05 && ~/.config/cwc/rofi/commands.sh')
 end, { description = "custom commands menu", group = "launcher" })
 
+-- auto-generated keybind cheatsheet (rofi). reads cwc.kbd.default_member,
+-- groups + sorts, writes pango markup to /tmp, hands off to a shell wrapper.
+local MOD_PRETTY = { LOGO = "Mod", CTRL = "Ctrl", SHIFT = "Shift", ALT = "Alt" }
+local MOD_ORDER  = { "LOGO", "CTRL", "ALT", "SHIFT" }
+local function pango_escape(s)
+    s = s:gsub("&", "&amp;")
+    s = s:gsub("<", "&lt;")
+    s = s:gsub(">", "&gt;")
+    return s
+end
+local function fmt_mods(names)
+    local seen, parts = {}, {}
+    for _, n in ipairs(names or {}) do seen[n] = true end
+    for _, n in ipairs(MOD_ORDER) do
+        if seen[n] then table.insert(parts, MOD_PRETTY[n] or n) end
+    end
+    return table.concat(parts, "+")
+end
+kbd.bind(MODKEY, "h", function()
+    local groups, gnames = {}, {}
+    for _, kb in ipairs(cwc.kbd.default_member or {}) do
+        local desc = kb.description or ""
+        if desc ~= "" then
+            local g = kb.group or "misc"
+            if not groups[g] then groups[g] = {}; table.insert(gnames, g) end
+            local mods = fmt_mods(kb.modifier_name)
+            local key  = mods ~= "" and (mods .. "+" .. (kb.keyname or "")) or (kb.keyname or "")
+            table.insert(groups[g], { key = key, desc = desc })
+        end
+    end
+    table.sort(gnames)
+    local out = {}
+    for _, g in ipairs(gnames) do
+        table.insert(out, string.format("<span color='#ff0050'>── %s ──</span>", pango_escape(g:upper())))
+        local items = groups[g]
+        local maxw = 0
+        for _, it in ipairs(items) do if #it.key > maxw then maxw = #it.key end end
+        table.sort(items, function(a, b) return a.key < b.key end)
+        for _, it in ipairs(items) do
+            local pad = string.rep(" ", maxw - #it.key + 2)
+            table.insert(out, string.format("<span color='#00ffb4'>%s</span>%s<span color='#ff9933'>%s</span>",
+                pango_escape(it.key), pad, pango_escape(it.desc)))
+        end
+    end
+    local f = io.open("/tmp/cwc-cheatsheet.txt", "w")
+    if f then f:write(table.concat(out, "\n")); f:close() end
+    cwc.spawn_with_shell("~/.config/cwc/scripts/cheatsheet.sh")
+end, { description = "show keybind cheatsheet", group = "launcher" })
+
 ------------------- utility
 kbd.bind({ MODKEY }, "Print", function()
     cwc.spawn_with_shell('grim - | copyq write image/png - && copyq select 0')
