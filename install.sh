@@ -3,7 +3,7 @@ set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_FILE="$DOTFILES_DIR/config.env"
-PACKAGES=(zsh bash git kitty mako swaylock cwc vscode k4 tmux)
+source "$DOTFILES_DIR/packages.sh"
 
 # Check for stow
 if ! command -v stow &>/dev/null; then
@@ -76,8 +76,8 @@ git -C "$DOTFILES_DIR" checkout -- .
 
 # Replace placeholders after checkout so the symlinked files get real values
 echo "Applying config..."
-sed -i "s/{{WORK_GIT_NAME}}/$WORK_GIT_NAME/g; s/{{WORK_GIT_EMAIL}}/$WORK_GIT_EMAIL/g" "$DOTFILES_DIR/git/.gitconfig"
-sed -i "s/{{PERSONAL_GIT_NAME}}/$PERSONAL_GIT_NAME/g; s/{{PERSONAL_GIT_EMAIL}}/$PERSONAL_GIT_EMAIL/g" "$DOTFILES_DIR/git/.gitconfig-personal"
+sed -i "s|{{WORK_GIT_NAME}}|$WORK_GIT_NAME|g; s|{{WORK_GIT_EMAIL}}|$WORK_GIT_EMAIL|g" "$DOTFILES_DIR/git/.gitconfig"
+sed -i "s|{{PERSONAL_GIT_NAME}}|$PERSONAL_GIT_NAME|g; s|{{PERSONAL_GIT_EMAIL}}|$PERSONAL_GIT_EMAIL|g" "$DOTFILES_DIR/git/.gitconfig-personal"
 sed -i "s|{{CYCLONEDDS_URI}}|$CYCLONEDDS_URI|g" "$DOTFILES_DIR/zsh/.zshrc"
 sed -i "s|{{CYCLONEDDS_URI}}|$CYCLONEDDS_URI|g" "$DOTFILES_DIR/bash/.bashrc"
 

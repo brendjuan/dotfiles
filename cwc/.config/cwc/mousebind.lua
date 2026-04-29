@@ -10,7 +10,6 @@ local button = enum.mouse_btn
 local direction = enum.direction
 
 local MODKEY = mod.LOGO
-local kbd = cwc.kbd
 
 -- prevent hotkey conflict on nested session
 if cwc.is_nested() then
@@ -47,11 +46,11 @@ end, function()
 end)
 
 ------------------- Keyboard as a mouse ----------------------
-local mouse_map = kbd.create_bindmap()
+local mouse_map = cwc.kbd.create_bindmap()
 mouse_map.active = false
 
 -- toggle this submap by pressing MOD + z
-kbd.bind({ MODKEY }, "z", function()
+cwc.kbd.bind({ MODKEY }, "z", function()
     mouse_map.active = not mouse_map.active
 end, { description = "activate mouse submap", group = "keymap" })
 

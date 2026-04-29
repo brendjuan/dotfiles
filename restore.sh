@@ -3,7 +3,7 @@ set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKUP_BASE="$DOTFILES_DIR/backups"
-PACKAGES=(zsh bash git kitty mako swaylock cwc vscode k4 tmux)
+source "$DOTFILES_DIR/packages.sh"
 
 if [ ! -d "$BACKUP_BASE" ] || [ -z "$(ls -A "$BACKUP_BASE" 2>/dev/null)" ]; then
     echo "No backups found in $BACKUP_BASE"
