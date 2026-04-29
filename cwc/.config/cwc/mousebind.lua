@@ -10,7 +10,6 @@ local button = enum.mouse_btn
 local direction = enum.direction
 
 local MODKEY = mod.LOGO
-local TERMINAL = "kitty"
 local kbd = cwc.kbd
 
 -- prevent hotkey conflict on nested session

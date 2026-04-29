@@ -132,6 +132,7 @@ end, { description = "promote focused client to master", group = "client" })
 
 kbd.bind({ MODKEY, mod.SHIFT }, "bracketleft", function()
     local c = cwc.client.focused()
+    if not c then return end
     local new_screen = cful.screen.idx(-1, c.screen)
     c:move_to_screen(new_screen)
     new_screen:focus()
@@ -139,6 +140,7 @@ end, { description = "cycle move focused client to previous screen", group = "cl
 
 kbd.bind({ MODKEY, mod.SHIFT }, "bracketright", function()
     local c = cwc.client.focused()
+    if not c then return end
     local new_screen = cful.screen.idx(1, c.screen)
     c:move_to_screen(new_screen)
     new_screen:focus()
@@ -261,13 +263,6 @@ local function resize_left()
 end
 
 local function resize_right()
-    local c = cwc.client.focused()
-    if not c or not c.floating then return end
-
-    c:resize(size_interval, 0)
-end
-
-local function resize_up()
     local c = cwc.client.focused()
     if not c or not c.floating then return end
 
@@ -597,7 +592,7 @@ kbd.bind({}, "XF86TouchpadToggle", function()
     end
 end, { exclusive = true })
 kbd.bind({}, "XF86Calculator", function()
-    cwc.spawn_with_shell(TERMINAL .. "-e python ")
+    cwc.spawn_with_shell(TERMINAL .. " -e python")
 end)
 kbd.bind({}, "XF86Mail", function()
     cwc.spawn_with_shell("thunderbird -addressbook")

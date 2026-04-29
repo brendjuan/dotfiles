@@ -184,7 +184,8 @@ cwc.connect_signal("client::map", function(client)
     -- unmanaged client is a popup/tooltip client in xwayland so lets skip it.
     if client.unmanaged then return end
 
-    -- ROS sim windows → ephemeral tags
+    -- ROS sim windows → ephemeral tags. Park them on the sim tag without
+    -- yanking the user's view away — surface them via MOD+0 when wanted.
     local sim_tag = sim_tag_for(client)
     if sim_tag then
         local screen = client.screen
@@ -195,9 +196,6 @@ cwc.connect_signal("client::map", function(client)
         t.label = SIM_TAG_LABELS[sim_tag] or tostring(sim_tag)
         t.layout_mode = enum.layout_mode.MASTER
         client:move_to_tag(sim_tag)
-        screen.active_workspace = sim_tag
-        client:raise()
-        client:focus()
         return
     end
 
