@@ -16,7 +16,7 @@ URL = "https://www.phillyrivercast.org/"
 CACHE = os.path.expanduser("~/.cache/rivercast.json")
 TTL = 1800  # site updates daily; 30min cache is plenty
 
-ICON = "\U000f1207"  # nf-md-waves
+ICON = "\U000f0608"  # nf-md-rowing — boathouse row energy
 
 
 def fetch():
