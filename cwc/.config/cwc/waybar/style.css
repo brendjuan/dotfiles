@@ -61,6 +61,34 @@ window#waybar {
     font-weight: bold;
 }
 
+#custom-rivercast {
+    /* schuylkill river telemetry — chip background broadcasts the rating */
+    padding: 0 6px;
+    margin: 2px 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #020008;
+    background-color: rgba(0, 255, 180, 0.22);
+}
+
+#custom-rivercast.green {
+    /* river clear — go forth */
+    background-color: #00ffb4;
+    color: #020008;
+}
+
+#custom-rivercast.yellow {
+    /* approach with caution — the river is sus */
+    background-color: #ff5500;
+    color: #020008;
+}
+
+#custom-rivercast.red {
+    /* DO NOT TOUCH WATER — bacteria have rights */
+    background-color: #ff0050;
+    color: #020008;
+}
+
 #taskbar button {
     padding: 0 3px;
     margin: 0;

@@ -7,7 +7,7 @@
     "height": 16,
     "modules-left": ["dwl/tags"],
     "modules-center": ["wlr/taskbar"],
-    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
 
     "tray": {
         "icon-size": 14,
@@ -26,6 +26,13 @@
         "interval": 2,
         "on-click": "pkill -INT wf-recorder || true",
         "tooltip": false
+    },
+
+    "custom/rivercast": {
+        "exec": "~/.config/cwc/scripts/rivercast.py",
+        "return-type": "json",
+        "interval": 300,
+        "on-click": "xdg-open https://www.phillyrivercast.org/"
     },
 
     "wlr/taskbar": {

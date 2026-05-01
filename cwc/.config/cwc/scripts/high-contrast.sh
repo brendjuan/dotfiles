@@ -11,7 +11,14 @@ WALLPAPER="$CWC_DIR/wallpaper.png"
 WALLPAPER_INVERTED="$CWC_DIR/wallpaper-inverted.png"
 
 enable_high_contrast() {
-    touch "$STATE_FILE"
+    # vscode: stash previous theme value (JSON: a quoted string, or `null` if unset)
+    # into the state file so disable_high_contrast can restore it. Written before
+    # touch so the file's existence still gates the toggle.
+    if [ -f "$VSCODE_SETTINGS" ]; then
+        jq -c '."workbench.colorTheme" // null' "$VSCODE_SETTINGS" > "$STATE_FILE"
+    else
+        : > "$STATE_FILE"
+    fi
 
     # waybar: swap to high contrast css and reload
     cp "$CWC_DIR/waybar/style-highcontrast.css" "$CWC_DIR/waybar/style-active.css"
@@ -50,6 +57,19 @@ enable_high_contrast() {
 }
 
 disable_high_contrast() {
+    # vscode: restore previous theme stashed by enable_high_contrast.
+    # If the stash is a string, set the key back to it; if it's null/empty/garbage,
+    # fall back to deleting the key so VS Code uses its default.
+    if [ -f "$VSCODE_SETTINGS" ]; then
+        prev=$(cat "$STATE_FILE" 2>/dev/null)
+        tmp=$(mktemp)
+        if [ -n "$prev" ] && echo "$prev" | jq -e 'type == "string"' >/dev/null 2>&1; then
+            jq --argjson v "$prev" '."workbench.colorTheme" = $v' "$VSCODE_SETTINGS" > "$tmp" && mv "$tmp" "$VSCODE_SETTINGS"
+        else
+            jq 'del(."workbench.colorTheme")' "$VSCODE_SETTINGS" > "$tmp" && mv "$tmp" "$VSCODE_SETTINGS"
+        fi
+    fi
+
     rm -f "$STATE_FILE"
 
     # waybar: restore glitchcore css and reload
@@ -66,12 +86,6 @@ disable_high_contrast() {
         mv "$MAKO_DIR/config.bak" "$MAKO_DIR/config"
     fi
     makoctl reload 2>/dev/null
-
-    # vscode: restore previous theme (remove the override)
-    if [ -f "$VSCODE_SETTINGS" ]; then
-        tmp=$(mktemp)
-        jq 'del(."workbench.colorTheme")' "$VSCODE_SETTINGS" > "$tmp" && mv "$tmp" "$VSCODE_SETTINGS"
-    fi
 
     # wallpaper: restore original and restart swaybg
     killall swaybg 2>/dev/null

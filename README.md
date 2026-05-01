@@ -21,10 +21,12 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `swaylock` | Swaylock screen locker          |
 | `cwc`      | CWC window compositor           |
 | `k4`       | `k4` script — launch kitty in a 2x2 grid |
-| `awesome`  | Awesome WM (overlay on [awesome-copycats](https://github.com/lcpz/awesome-copycats)) |
+| `awesome`  | **Legacy.** Awesome WM (overlay on [awesome-copycats](https://github.com/lcpz/awesome-copycats)) |
 
-The `awesome` package is optional — the install script will prompt before setting it up.
-It clones awesome-copycats and overlays customized `rc.lua` and `theme.lua` on top.
+> **Legacy:** `awesome/` is kept around for X11 fallback but is no longer the primary
+> WM — `cwc` is. The install script prompts before setting it up; skip it on new
+> machines. It clones awesome-copycats and overlays customized `rc.lua` and
+> `theme.lua` on top.
 
 ## Install
 
