@@ -435,12 +435,16 @@ end, { description = "open a terminal", group = "launcher" })
 kbd.bind({ MODKEY }, "F1", function()
     cwc.spawn_with_shell("firefox")
 end, { description = "open a web browser", group = "launcher" })
-kbd.bind(MODKEY, "r", function()
+-- fire on release so a phantom-repeating keyboard can't bleed held-key events
+-- into rofi's grab. signature: kbd.bind(mods, key, on_press, on_release, opts)
+-- no-op on_press is required (cwc rejects nil) — release does the actual work.
+local NOOP = function() end
+kbd.bind(MODKEY, "r", NOOP, function()
     cwc.spawn_with_shell(
         'pkill rofi; sleep 0.05 && rofi -show drun -icon-theme "Papirus-dark" -show-icons -normal-window -steal-focus'
         .. ' -theme ~/.config/cwc/rofi/glitchcore.rasi')
 end, { description = "application launcher", group = "launcher" })
-kbd.bind(MODKEY, "c", function()
+kbd.bind(MODKEY, "c", NOOP, function()
     cwc.spawn_with_shell('pkill rofi; sleep 0.05 && ~/.config/cwc/rofi/commands.sh')
 end, { description = "custom commands menu", group = "launcher" })
 
@@ -462,7 +466,7 @@ local function fmt_mods(names)
     end
     return table.concat(parts, "+")
 end
-kbd.bind(MODKEY, "h", function()
+kbd.bind(MODKEY, "h", NOOP, function()
     local groups, gnames = {}, {}
     for _, kb in ipairs(cwc.kbd.default_member or {}) do
         local desc = kb.description or ""
@@ -491,7 +495,7 @@ kbd.bind(MODKEY, "h", function()
     local f = io.open("/tmp/cwc-cheatsheet.txt", "w")
     if f then f:write(table.concat(out, "\n")); f:close() end
     cwc.spawn_with_shell("~/.config/cwc/scripts/cheatsheet.sh")
-end, { description = "show keybind cheatsheet", group = "launcher" })
+end, { description = "show keybind cheatsheet", group = "launcher" })  -- on-release for the same phantom-repeat reason as MOD+R / MOD+C
 
 ------------------- utility
 kbd.bind({ MODKEY }, "Print", function()

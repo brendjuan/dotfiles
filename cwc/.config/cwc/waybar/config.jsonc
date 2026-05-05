@@ -7,7 +7,7 @@
     "height": 16,
     "modules-left": ["dwl/tags"],
     "modules-center": ["wlr/taskbar"],
-    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "custom/github", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
 
     "tray": {
         "icon-size": 14,
@@ -33,6 +33,13 @@
         "return-type": "json",
         "interval": 300,
         "on-click": "xdg-open https://www.phillyrivercast.org/"
+    },
+
+    "custom/github": {
+        "exec": "~/.config/cwc/scripts/github-status.py",
+        "return-type": "json",
+        "interval": 120,
+        "on-click": "xdg-open https://www.githubstatus.com/"
     },
 
     "wlr/taskbar": {

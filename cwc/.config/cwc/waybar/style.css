@@ -89,6 +89,31 @@ window#waybar {
     color: #020008;
 }
 
+#custom-github {
+    /* github.com health — same chip treatment */
+    padding: 0 6px;
+    margin: 2px 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #020008;
+    background-color: rgba(0, 255, 180, 0.22);
+}
+
+#custom-github.green {
+    background-color: #00ffb4;
+    color: #020008;
+}
+
+#custom-github.yellow {
+    background-color: #ff5500;
+    color: #020008;
+}
+
+#custom-github.red {
+    background-color: #ff0050;
+    color: #020008;
+}
+
 #taskbar button {
     padding: 0 3px;
     margin: 0;
