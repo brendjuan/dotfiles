@@ -63,8 +63,8 @@ window#waybar {
 
 #custom-rivercast {
     /* schuylkill river telemetry — chip background broadcasts the rating */
-    padding: 0 6px;
-    margin: 2px 4px;
+    padding: 0 6px;  /* rowing glyph centers naturally — symmetric */
+    margin: 2px 0 2px 4px;  /* flush against next chip on the right */
     font-size: 12px;
     font-weight: bold;
     color: #020008;
@@ -91,8 +91,8 @@ window#waybar {
 
 #custom-github {
     /* github.com health — same chip treatment */
-    padding: 0 6px;
-    margin: 2px 4px;
+    padding: 0 7px 0 5px;  /* octocat sat slightly right — shift it left 1px */
+    margin: 2px 0;  /* flush against neighbors on both sides */
     font-size: 12px;
     font-weight: bold;
     color: #020008;
@@ -110,6 +110,40 @@ window#waybar {
 }
 
 #custom-github.red {
+    background-color: #ff0050;
+    color: #020008;
+}
+
+#custom-claude {
+    /* claude session/weekly limit telemetry — same chip treatment */
+    padding: 0 8px 0 4px;  /* brain sits ~2px right of center — nudge left */
+    margin: 2px 4px 2px 0;  /* flush against previous chip on the left */
+    font-size: 12px;
+    font-weight: bold;
+    color: #020008;
+    background-color: rgba(0, 255, 180, 0.22);
+}
+
+#custom-claude.green {
+    /* under 75% — plenty of runway */
+    background-color: #00ffb4;
+    color: #020008;
+}
+
+#custom-claude.yellow {
+    /* 75–85% — easing into the danger zone */
+    background-color: #ffd000;
+    color: #020008;
+}
+
+#custom-claude.orange {
+    /* 85–90% — wrap it up, friend */
+    background-color: #ff5500;
+    color: #020008;
+}
+
+#custom-claude.red {
+    /* >90% — context budget on fire */
     background-color: #ff0050;
     color: #020008;
 }

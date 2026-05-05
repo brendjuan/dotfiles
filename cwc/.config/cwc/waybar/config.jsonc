@@ -7,7 +7,7 @@
     "height": 16,
     "modules-left": ["dwl/tags"],
     "modules-center": ["wlr/taskbar"],
-    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "custom/github", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "custom/github", "custom/claude", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
 
     "tray": {
         "icon-size": 14,
@@ -40,6 +40,13 @@
         "return-type": "json",
         "interval": 120,
         "on-click": "xdg-open https://www.githubstatus.com/"
+    },
+
+    "custom/claude": {
+        "exec": "~/.config/cwc/scripts/claude-usage.py",
+        "return-type": "json",
+        "interval": 45,
+        "on-click": "kitty --app-id float-term --title 'CLAUDE USAGE' -o initial_window_width=92c -o initial_window_height=36c ~/.config/cwc/scripts/claude-dashboard.py"
     },
 
     "wlr/taskbar": {
