@@ -435,16 +435,24 @@ end, { description = "open a terminal", group = "launcher" })
 kbd.bind({ MODKEY }, "F1", function()
     cwc.spawn_with_shell("firefox")
 end, { description = "open a web browser", group = "launcher" })
--- fire on release so a phantom-repeating keyboard can't bleed held-key events
--- into rofi's grab. signature: kbd.bind(mods, key, on_press, on_release, opts)
--- no-op on_press is required (cwc rejects nil) — release does the actual work.
-local NOOP = function() end
-kbd.bind(MODKEY, "r", NOOP, function()
+-- fire on key-release so phantom auto-repeats can't bleed into rofi's grab.
+-- the armed closure stops MOD+SHIFT+<key> from also triggering MOD+<key>'s
+-- release (cwc matches each event by current modifier mask).
+local function bind_release(mods, key, action, opts)
+    local armed = false
+    kbd.bind(mods, key,
+        function() armed = true end,
+        function() if armed then armed = false; action() end end,
+        opts)
+end
+
+bind_release(MODKEY, "r", function()
     cwc.spawn_with_shell(
         'pkill rofi; sleep 0.05 && rofi -show drun -icon-theme "Papirus-dark" -show-icons -normal-window -steal-focus'
         .. ' -theme ~/.config/cwc/rofi/glitchcore.rasi')
 end, { description = "application launcher", group = "launcher" })
-kbd.bind(MODKEY, "c", NOOP, function()
+
+bind_release(MODKEY, "c", function()
     cwc.spawn_with_shell('pkill rofi; sleep 0.05 && ~/.config/cwc/rofi/commands.sh')
 end, { description = "custom commands menu", group = "launcher" })
 
@@ -466,7 +474,7 @@ local function fmt_mods(names)
     end
     return table.concat(parts, "+")
 end
-kbd.bind(MODKEY, "h", NOOP, function()
+bind_release(MODKEY, "h", function()
     local groups, gnames = {}, {}
     for _, kb in ipairs(cwc.kbd.default_member or {}) do
         local desc = kb.description or ""
@@ -495,7 +503,7 @@ kbd.bind(MODKEY, "h", NOOP, function()
     local f = io.open("/tmp/cwc-cheatsheet.txt", "w")
     if f then f:write(table.concat(out, "\n")); f:close() end
     cwc.spawn_with_shell("~/.config/cwc/scripts/cheatsheet.sh")
-end, { description = "show keybind cheatsheet", group = "launcher" })  -- on-release for the same phantom-repeat reason as MOD+R / MOD+C
+end, { description = "show keybind cheatsheet", group = "launcher" })
 
 ------------------- utility
 kbd.bind({ MODKEY }, "Print", function()
