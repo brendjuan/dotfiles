@@ -10,6 +10,34 @@ VSCODE_SETTINGS="$HOME/.config/Code/User/settings.json"
 WALLPAPER="$CWC_DIR/wallpaper.png"
 WALLPAPER_INVERTED="$CWC_DIR/wallpaper-inverted.png"
 
+# Glitchcore default opacity (matches kitty.conf). High contrast forces opaque.
+KITTY_OPACITY_DEFAULT="0.75"
+KITTY_OPACITY_HIGHCONTRAST="1.0"
+
+log() { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*" >> "$LOG_FILE"; }
+
+apply_kitty_colors() {
+    # $1: path to colors.conf, or empty string for --reset
+    # $2: opacity to apply
+    local colors_conf="$1"
+    local opacity="$2"
+    local found=0
+    for sock in /tmp/kitty-*; do
+        [ -S "$sock" ] || continue
+        found=1
+        if [ -n "$colors_conf" ]; then
+            kitty @ --to "unix:$sock" set-colors --all --configured "$colors_conf" >>"$LOG_FILE" 2>&1 \
+                || log "set-colors failed on $sock"
+        else
+            kitty @ --to "unix:$sock" set-colors --all --reset >>"$LOG_FILE" 2>&1 \
+                || log "set-colors --reset failed on $sock"
+        fi
+        kitty @ --to "unix:$sock" set-background-opacity "$opacity" >>"$LOG_FILE" 2>&1 \
+            || log "set-background-opacity failed on $sock"
+    done
+    [ "$found" = 0 ] && log "no kitty sockets found at /tmp/kitty-*"
+}
+
 enable_high_contrast() {
     # vscode: stash previous theme value (JSON: a quoted string, or `null` if unset)
     # into the state file so disable_high_contrast can restore it. Written before
@@ -24,10 +52,9 @@ enable_high_contrast() {
     cp "$CWC_DIR/waybar/style-highcontrast.css" "$CWC_DIR/waybar/style-active.css"
     killall -SIGUSR2 waybar 2>/dev/null
 
-    # kitty: push high contrast colors to all running instances
-    for sock in /tmp/kitty-*; do
-        [ -S "$sock" ] && kitty @ --to "unix:$sock" set-colors --all "$KITTY_DIR/highcontrast.conf" 2>/dev/null
-    done
+    # kitty: push high contrast colors to all running instances. --configured so
+    # new windows also pick up the theme; opacity is a separate setting from colors.
+    apply_kitty_colors "$KITTY_DIR/highcontrast.conf" "$KITTY_OPACITY_HIGHCONTRAST"
 
     # mako: swap config and reload
     cp "$MAKO_DIR/config" "$MAKO_DIR/config.bak"
@@ -76,10 +103,8 @@ disable_high_contrast() {
     cp "$CWC_DIR/waybar/style.css" "$CWC_DIR/waybar/style-active.css"
     killall -SIGUSR2 waybar 2>/dev/null
 
-    # kitty: restore default (just reset to config defaults)
-    for sock in /tmp/kitty-*; do
-        [ -S "$sock" ] && kitty @ --to "unix:$sock" set-colors --all --reset 2>/dev/null
-    done
+    # kitty: reset palette to startup defaults and put opacity back where kitty.conf has it
+    apply_kitty_colors "" "$KITTY_OPACITY_DEFAULT"
 
     # mako: restore original config
     if [ -f "$MAKO_DIR/config.bak" ]; then
@@ -95,8 +120,10 @@ disable_high_contrast() {
     notify-send "High Contrast" "OFF — glitchcore restored" -u low
 }
 
+log "invoked (caller=${PPID}, state_file_exists=$([ -f "$STATE_FILE" ] && echo yes || echo no))"
 if [ -f "$STATE_FILE" ]; then
     disable_high_contrast
 else
     enable_high_contrast
 fi
+log "done"
