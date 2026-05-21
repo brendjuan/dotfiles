@@ -97,7 +97,7 @@ cwc.connect_signal("screen::new", function(screen)
     if screen.name == "DP-4" then
         screen:set_mode(2560, 1440, 100) -- actually ~99.965 Hz; cwc ±2 Hz fuzzy matches
         screen:set_scale(1.0)
-        screen:set_transform(enum.output_transform.TRANSFORM_270)
+        screen:set_transform(enum.output_transform.TRANSFORM_90)
         screen:set_adaptive_sync(false)
         screen:set_position(5120, 0)
     end
