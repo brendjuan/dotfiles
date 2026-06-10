@@ -3,6 +3,7 @@
 # entry points: MOD+F6, waybar button, MOD+C command menu
 
 STATE_FILE="$HOME/.cache/high-contrast-mode"
+LOG_FILE="$HOME/.cache/high-contrast-mode.log"
 CWC_DIR="$HOME/.config/cwc"
 KITTY_DIR="$HOME/.config/kitty"
 MAKO_DIR="$HOME/.config/mako"
