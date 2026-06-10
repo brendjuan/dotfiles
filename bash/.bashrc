@@ -147,7 +147,7 @@ fi
 export CYCLONEDDS_URI="{{CYCLONEDDS_URI}}"
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
-source /opt/ros/jazzy/setup.bash
+[ -f /opt/ros/jazzy/setup.bash ] && source /opt/ros/jazzy/setup.bash
 
 alias emacs="emacs -nw"
 export VISUAL="emacs -nw"
