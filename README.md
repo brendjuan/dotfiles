@@ -21,6 +21,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `swaylock` | Swaylock screen locker          |
 | `cwc`      | CWC window compositor           |
 | `k4`       | `k4` script — launch kitty in a 2x2 grid |
+| `claude`   | Claude Code skills (`.claude/skills/`) — only skills, no creds/state |
 | `awesome`  | **Legacy.** Awesome WM (overlay on [awesome-copycats](https://github.com/lcpz/awesome-copycats)) |
 
 > **Legacy:** `awesome/` is kept around for X11 fallback but is no longer the primary
