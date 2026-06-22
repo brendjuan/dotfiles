@@ -177,3 +177,54 @@ elif lspci 2>/dev/null | grep -qi 'VGA.*AMD.*Radeon'; then
 else
   prime-run() { "$@"; }  # no discrete GPU: just run on the default GPU
 fi
+
+# zerotier-one systemctl shortcut: `zero <cmd>` -> `sudo systemctl <cmd> zerotier-one.service`
+zero() { sudo systemctl "$1" zerotier-one.service; }
+
+# nomad systemctl shortcut: `nom <cmd>` -> `sudo systemctl <cmd> nomad.service`
+nom() { sudo systemctl "$1" nomad.service; }
+
+# `lsb`: ls with each subdir's git branch shown inline next to the folder, when
+# the subdir is a git repo whose branch differs from the current directory's.
+# Works with plain `lsb` and long format (`lsb -la`).
+lsb() {
+  local cur name b line longfmt=0 a
+  cur=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+  for a in "$@"; do
+    case $a in
+      --) break ;;
+      --format=long|--format=verbose) longfmt=1 ;;
+      --*) ;;
+      -*l*) longfmt=1 ;;
+    esac
+  done
+  if [ "$longfmt" -eq 1 ]; then
+    command ls "$@" | while IFS= read -r line; do
+      case $line in total\ *|"") printf '%s\n' "$line"; continue ;; esac
+      name=$(printf '%s\n' "$line" | awk '{for(i=9;i<=NF;i++)printf "%s%s",$i,(i<NF?" ":"")}')
+      name=${name%% -> *}
+      case $name in .|..) printf '%s\n' "$line"; continue ;; esac
+      if [ -d "$name" ]; then
+        b=$(git -C "$name" rev-parse --abbrev-ref HEAD 2>/dev/null)
+        if [ -n "$b" ] && [ "$b" != "$cur" ]; then
+          printf '%s \033[33m(%s)\033[0m\n' "$line" "$b"
+          continue
+        fi
+      fi
+      printf '%s\n' "$line"
+    done
+  else
+    command ls -1 "$@" | while IFS= read -r name; do
+      if [ -d "$name" ]; then
+        b=$(git -C "$name" rev-parse --abbrev-ref HEAD 2>/dev/null)
+        if [ -n "$b" ] && [ "$b" != "$cur" ]; then
+          printf '\033[1;34m%s\033[0m \033[33m(%s)\033[0m\n' "$name" "$b"
+        else
+          printf '\033[1;34m%s\033[0m\n' "$name"
+        fi
+      else
+        printf '%s\n' "$name"
+      fi
+    done
+  fi
+}
