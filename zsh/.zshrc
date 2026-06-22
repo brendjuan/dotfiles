@@ -181,7 +181,6 @@ esac
 # pnpm end
 
 export PATH="/home/bjax/.pixi/bin:$PATH"
-source $HOME/.ros_ardusub_env/env
 
 # zerotier-one systemctl shortcut: `zero <cmd>` -> `sudo systemctl <cmd> zerotier-one.service`
 zero() { sudo systemctl "$1" zerotier-one.service; }
