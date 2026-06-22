@@ -59,11 +59,11 @@ Workflow runs in the background; wait for the completion notification, then read
 
 ### 3. Write the report and show the summary
 
-1. **Write** `report_markdown` to a file in the current working directory using the Write tool. Name it:
+1. **Write** `report_markdown` to a file under `~/claude-reviews/<date>/` using the Write tool. Create the directory first (`mkdir -p ~/claude-reviews/"$(date +%Y-%m-%d)"`) and name the file:
    ```
-   review-swarm-<branch>-<YYYYMMDD-HHMM>.md
+   ~/claude-reviews/<YYYY-MM-DD>/review-swarm-<branch>-<YYYYMMDD-HHMM>.md
    ```
-   Sanitize `/` in the branch name to `-`. Get the timestamp with `date +%Y%m%d-%H%M`.
+   Sanitize `/` in the branch name to `-`. Get the day folder with `date +%Y-%m-%d` and the filename timestamp with `date +%Y%m%d-%H%M`.
 2. **Show the user a concise terminal summary** — do NOT paste the whole report. Print:
    - the one-line severity tally from `counts.by_severity` and the confirmed/false-positive/uncertain counts,
    - the `tldr`,
