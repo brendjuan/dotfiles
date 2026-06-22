@@ -191,9 +191,10 @@ nom() { sudo systemctl "$1" nomad.service; }
 
 # `lsb`: ls with each subdir's git branch shown inline next to the folder, when
 # the subdir is a git repo whose branch differs from the current directory's.
-# Works with plain `lsb` and long format (`lsb -la`).
+# Works with plain `lsb` and long format (`lsb -la`); preserves ls's own colors.
 lsb() {
-  local cur name b line longfmt=0 a
+  local cur name b line clean longfmt=0 a onecol=-1 coloropt=
+  [ -t 1 ] && coloropt=--color=always
   cur=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
   for a in "$@"; do
     case $a in
@@ -203,33 +204,25 @@ lsb() {
       -*l*) longfmt=1 ;;
     esac
   done
-  if [ "$longfmt" -eq 1 ]; then
-    command ls "$@" | while IFS= read -r line; do
-      case $line in total\ *|"") printf '%s\n' "$line"; continue ;; esac
-      name=$(printf '%s\n' "$line" | awk '{for(i=9;i<=NF;i++)printf "%s%s",$i,(i<NF?" ":"")}')
-      name=${name%% -> *}
-      case $name in .|..) printf '%s\n' "$line"; continue ;; esac
-      if [ -d "$name" ]; then
-        b=$(git -C "$name" rev-parse --abbrev-ref HEAD 2>/dev/null)
-        if [ -n "$b" ] && [ "$b" != "$cur" ]; then
-          printf '%s \033[33m(%s)\033[0m\n' "$line" "$b"
-          continue
-        fi
+  [ "$longfmt" -eq 1 ] && onecol=          # -l implies one entry per line already
+  command ls $onecol $coloropt "$@" | while IFS= read -r line; do
+    clean=$(printf '%s\n' "$line" | sed 's/\x1b\[[0-9;]*m//g')   # strip ANSI for matching
+    case $clean in total\ *|"") printf '%s\n' "$line"; continue ;; esac
+    if [ "$longfmt" -eq 1 ]; then
+      name=$(printf '%s\n' "$clean" | awk '{for(i=9;i<=NF;i++)printf "%s%s",$i,(i<NF?" ":"")}')
+    else
+      name=$clean
+    fi
+    name=${name%% -> *}
+    case $name in .|..) printf '%s\n' "$line"; continue ;; esac
+    if [ -d "$name" ]; then
+      b=$(git -C "$name" rev-parse --abbrev-ref HEAD 2>/dev/null)
+      if [ -n "$b" ] && [ "$b" != "$cur" ]; then
+        printf '%s \033[33m(%s)\033[0m\n' "$line" "$b"
+        continue
       fi
-      printf '%s\n' "$line"
-    done
-  else
-    command ls -1 "$@" | while IFS= read -r name; do
-      if [ -d "$name" ]; then
-        b=$(git -C "$name" rev-parse --abbrev-ref HEAD 2>/dev/null)
-        if [ -n "$b" ] && [ "$b" != "$cur" ]; then
-          printf '\033[1;34m%s\033[0m \033[33m(%s)\033[0m\n' "$name" "$b"
-        else
-          printf '\033[1;34m%s\033[0m\n' "$name"
-        fi
-      else
-        printf '%s\n' "$name"
-      fi
-    done
-  fi
+    fi
+    printf '%s\n' "$line"
+  done
 }
+alias ls='lsb'
