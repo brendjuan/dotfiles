@@ -9,7 +9,7 @@ mkdir -p "$DIR/deployment"
 kitty --session - <<EOF
 layout grid
 cd $DIR
-launch zsh -ic "task deploy:gps-fix; exec zsh -i"
+launch
 launch --cwd $DIR/deployment zsh -ic "task ping -- --scan; exec zsh -i"
 launch
 launch
