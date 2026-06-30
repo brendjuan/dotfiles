@@ -12,6 +12,7 @@ ROFI_MARKUP_OPTS=("${ROFI_OPTS[@]}" -markup-rows)
 
 declare -A commands=(
     ["󰤥 Network (nmtui)"]="kitty --class float-term -e nmtui"
+    ["󰓦 Fetch All Workspaces"]="kitty --class float-term -e $HOME/.config/cwc/rofi/fetch-workspaces.sh"
     ["󱒈 Workspace Grid"]="__workspace_grid"
     ["󰐊 Review Grid"]="__review_grid"
     ["󰨞 VSCode Workspace"]="~/.config/cwc/rofi/vscode-workspace.sh"
