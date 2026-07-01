@@ -12,14 +12,24 @@ export const meta = {
 //   args.scope   : human description of what is being reviewed
 //   args.range   : git diff range, e.g. "origin/main...HEAD" (or "" for none)
 //   args.changed : array of changed file paths (may be empty -> agents discover)
-const SCOPE = (args && args.scope) || 'the current changes'
-const RANGE = (args && args.range) || ''
-const CHANGED = (args && args.changed) || []
+// args may arrive as an object or a JSON-encoded string depending on the caller.
+const ARGS = (typeof args === 'string') ? JSON.parse(args) : (args || {})
+const SCOPE = ARGS.scope || 'the current changes'
+const RANGE = ARGS.range || ''
+const CHANGED = ARGS.changed || []
 
-const DIFF_CMD = RANGE ? `git diff ${RANGE}` : 'git diff'
+// Never go bare `git diff` (a clean tree would silently widen scope to a stale
+// local main). Default to origin/main so branch staleness can't inflate scope.
+const DIFF_CMD = RANGE ? `git diff ${RANGE}` : 'git diff origin/main...HEAD'
+if (!RANGE && !CHANGED.length) log('⚠️ no range or changed-file list supplied; defaulting to origin/main...HEAD')
+
+const FILE_BOUNDARY = CHANGED.length
+  ? `Review ONLY these files — findings outside this set are out of scope and must be dropped.\n`
+  : ''
 const DIFF_HINT =
   `Review scope: ${SCOPE}\n` +
   `Primary diff command: \`${DIFF_CMD}\`\n` +
+  FILE_BOUNDARY +
   `Changed files:\n${CHANGED.length ? CHANGED.map(f => '  - ' + f).join('\n') : '  (run the diff command to discover them)'}\n\n` +
   `Inspect the diff AND read enough surrounding code (whole functions, callers, tests) to judge correctly. ` +
   `Cite an exact file:line for every finding. Only report issues that the actual code supports — do not speculate.`
@@ -92,6 +102,8 @@ if (findings.length === 0) {
     `**No issues found.** All ${DIMENSIONS.length} dimension reviewers reported a clean diff for ${SCOPE}.\n`
   return {
     scope: SCOPE,
+    range: RANGE,
+    diff_cmd: DIFF_CMD,
     counts: { found: 0, confirmed: 0, false_positive: 0, uncertain: 0, by_severity: {} },
     tldr: `No issues found — all ${DIMENSIONS.length} reviewers reported a clean diff.`,
     summary_bullets: [`All ${DIMENSIONS.length} dimension reviewers reported a clean diff for ${SCOPE}.`],
@@ -192,6 +204,8 @@ const bySeverity = ['critical', 'high', 'medium', 'low', 'nit'].reduce((acc, s) 
 
 return {
   scope: SCOPE,
+  range: RANGE,
+  diff_cmd: DIFF_CMD,
   counts: {
     found: findings.length,
     confirmed: confirmed.length,
