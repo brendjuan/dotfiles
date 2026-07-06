@@ -7,7 +7,7 @@
     "height": 16,
     "modules-left": ["dwl/tags"],
     "modules-center": ["wlr/taskbar"],
-    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "custom/github", "custom/claude", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "custom/github", "custom/claude-usage", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
 
     "tray": {
         "icon-size": 14,
@@ -49,7 +49,7 @@
         "on-click": "~/.config/cwc/scripts/package-tracker.py --open"
     },
 
-    "custom/claude": {
+    "custom/claude-usage": {
         "exec": "~/.config/cwc/scripts/claude-usage.py",
         "return-type": "json",
         "interval": 45,

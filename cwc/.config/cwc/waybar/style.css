@@ -142,7 +142,7 @@ window#waybar {
     color: #020008;
 }
 
-#custom-claude {
+#custom-claude-usage {
     /* claude session/weekly limit telemetry — same chip treatment */
     padding: 0 8px 0 4px;  /* brain sits ~2px right of center — nudge left */
     margin: 2px 4px 2px 0;  /* flush against previous chip on the left */
@@ -152,25 +152,25 @@ window#waybar {
     background-color: rgba(0, 255, 180, 0.22);
 }
 
-#custom-claude.green {
+#custom-claude-usage.green {
     /* under 75% — plenty of runway */
     background-color: #00ffb4;
     color: #020008;
 }
 
-#custom-claude.yellow {
+#custom-claude-usage.yellow {
     /* 75–85% — easing into the danger zone */
     background-color: #ffd000;
     color: #020008;
 }
 
-#custom-claude.orange {
+#custom-claude-usage.orange {
     /* 85–90% — wrap it up, friend */
     background-color: #ff5500;
     color: #020008;
 }
 
-#custom-claude.red {
+#custom-claude-usage.red {
     /* >90% — context budget on fire */
     background-color: #ff0050;
     color: #020008;

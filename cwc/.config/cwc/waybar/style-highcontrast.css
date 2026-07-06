@@ -127,6 +127,37 @@ window#waybar {
     color: #ffffff;
 }
 
+#custom-claude-usage {
+    /* claude session/weekly limit telemetry — same chip treatment as github.
+       (was missing here, so the chip lost its badge and vanished in sunlight mode) */
+    padding: 0 8px 0 4px;
+    margin: 2px 4px 2px 0;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #999999;
+}
+
+#custom-claude-usage.green {
+    background-color: #008833;
+    color: #ffffff;
+}
+
+#custom-claude-usage.yellow {
+    background-color: #cc8800;
+    color: #ffffff;
+}
+
+#custom-claude-usage.orange {
+    background-color: #cc5500;
+    color: #ffffff;
+}
+
+#custom-claude-usage.red {
+    background-color: #cc0000;
+    color: #ffffff;
+}
+
 #taskbar button {
     padding: 0 3px;
     margin: 0;
