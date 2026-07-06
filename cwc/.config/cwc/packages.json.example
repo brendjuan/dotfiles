@@ -1,0 +1,18 @@
+{
+  "//": "copy to ~/.config/cwc/packages.json (NOT stowed — holds creds).",
+  "//creds": "developer.fedex.com → create project → enable Track API → production key/secret",
+  "//behavior": "chip hides when packages is empty; url overrides the on-click target",
+  "fedex": {
+    "client_id": "PASTE_CLIENT_ID",
+    "client_secret": "PASTE_CLIENT_SECRET",
+    "environment": "production"
+  },
+  "packages": [
+    {
+      "carrier": "fedex",
+      "tracking": "731234567890",
+      "label": "that thing you ordered",
+      "url": "optional — overrides the fedex page on click"
+    }
+  ]
+}

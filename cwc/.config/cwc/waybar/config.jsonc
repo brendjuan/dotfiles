@@ -42,6 +42,13 @@
         "on-click": "xdg-open https://www.githubstatus.com/"
     },
 
+    "custom/package": {
+        "exec": "~/.config/cwc/scripts/package-tracker.py",
+        "return-type": "json",
+        "interval": 600,
+        "on-click": "~/.config/cwc/scripts/package-tracker.py --open"
+    },
+
     "custom/claude": {
         "exec": "~/.config/cwc/scripts/claude-usage.py",
         "return-type": "json",

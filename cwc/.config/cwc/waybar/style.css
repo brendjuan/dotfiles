@@ -114,6 +114,34 @@ window#waybar {
     color: #020008;
 }
 
+#custom-package {
+    /* where-is-my-stuff telemetry — same chip treatment */
+    padding: 0 6px;
+    margin: 2px 0;  /* flush against neighbors on both sides */
+    font-size: 12px;
+    font-weight: bold;
+    color: #020008;
+    background-color: rgba(0, 255, 180, 0.22);
+}
+
+#custom-package.green {
+    /* delivered / out for delivery — the box cometh */
+    background-color: #00ffb4;
+    color: #020008;
+}
+
+#custom-package.yellow {
+    /* label created or creds missing — schrödinger's shipment */
+    background-color: #ffd000;
+    color: #020008;
+}
+
+#custom-package.red {
+    /* delivery exception — the box is LOST IN THE VOID */
+    background-color: #ff0050;
+    color: #020008;
+}
+
 #custom-claude {
     /* claude session/weekly limit telemetry — same chip treatment */
     padding: 0 8px 0 4px;  /* brain sits ~2px right of center — nudge left */

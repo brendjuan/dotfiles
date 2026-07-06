@@ -21,6 +21,7 @@ git/.gitconfig
 git/.gitconfig-personal
 
 # Runtime generated
+__pycache__/
 cwc/.config/cwc/waybar/style-active.css
 mako/.config/mako/config.bak
 

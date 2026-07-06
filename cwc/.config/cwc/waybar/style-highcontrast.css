@@ -103,6 +103,30 @@ window#waybar {
     color: #ffffff;
 }
 
+#custom-package {
+    padding: 0 6px;
+    margin: 2px 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #999999;
+}
+
+#custom-package.green {
+    background-color: #008833;
+    color: #ffffff;
+}
+
+#custom-package.yellow {
+    background-color: #cc8800;
+    color: #ffffff;
+}
+
+#custom-package.red {
+    background-color: #cc0000;
+    color: #ffffff;
+}
+
 #taskbar button {
     padding: 0 3px;
     margin: 0;
