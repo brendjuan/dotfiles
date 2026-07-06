@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=GHOST
+Comment=Ghostfin Hardware Operations & Submersible Testing
+Exec=/home/bjax/Applications/GHOST_11.2.0_amd64.AppImage %U
+Icon=/home/bjax/.local/share/icons/ghost.png
+Terminal=false
+StartupWMClass=albacore-ghost
+Categories=Utility;
