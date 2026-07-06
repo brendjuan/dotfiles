@@ -1,10 +1,14 @@
 # mako notification daemon config
-# high contrast sunlight mode
+# Base = glitchcore dark. The high-contrast "sunlight" mode is a native mako
+# MODE, toggled at runtime by ~/.config/cwc/scripts/high-contrast.sh via
+#   makoctl mode -a highcontrast   (on)
+#   makoctl mode -r highcontrast   (off)
+# No file copying, so this stow-symlinked file is never mutated.
 
 font=Hack Nerd Font 11
-background-color=#ffffff
-text-color=#000000
-border-color=#000000
+background-color=#020008eb
+text-color=#00ffb4
+border-color=#00ffb4
 border-size=2
 border-radius=0
 padding=12
@@ -20,8 +24,20 @@ anchor=top-right
 [app-name=kitty summary="4;0;"]
 invisible=1
 
-# urgent notifications
+# urgent notifications (glitchcore)
 [urgency=critical]
+background-color=#020008f2
+text-color=#ff0050
+border-color=#ff0050
+default-timeout=0
+
+# ── high-contrast "sunlight" mode overrides ──────────────────────────
+[mode=highcontrast]
+background-color=#ffffff
+text-color=#000000
+border-color=#000000
+
+[mode=highcontrast urgency=critical]
 background-color=#ffffff
 text-color=#cc0000
 border-color=#cc0000

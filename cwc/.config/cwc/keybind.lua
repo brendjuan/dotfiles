@@ -447,9 +447,13 @@ local function bind_release(mods, key, action, opts)
 end
 
 bind_release(MODKEY, "r", function()
+    -- pick the rofi theme from high-contrast state so the launcher isn't a dark
+    -- low-contrast window in sunlight mode (matches rofi/commands.sh).
     cwc.spawn_with_shell(
-        'pkill rofi; sleep 0.05 && rofi -show drun -icon-theme "Papirus-dark" -show-icons -normal-window -steal-focus'
-        .. ' -theme ~/.config/cwc/rofi/glitchcore.rasi')
+        'pkill rofi; sleep 0.05 && '
+        .. 'TH=~/.config/cwc/rofi/glitchcore.rasi; '
+        .. '[ -f ~/.cache/high-contrast-mode ] && TH=~/.config/cwc/rofi/highcontrast.rasi; '
+        .. 'rofi -show drun -icon-theme "Papirus-dark" -show-icons -normal-window -steal-focus -theme "$TH"')
 end, { description = "application launcher", group = "launcher" })
 
 bind_release(MODKEY, "c", function()
@@ -522,9 +526,9 @@ kbd.bind({ MODKEY }, "b", function()
     cwc.spawn_with_shell("kill -s USR1 `pgrep waybar`")
 end, { description = "toggle waybar", group = "launcher" })
 kbd.bind({ MODKEY }, "F6", function()
+    -- the script reloads cwc itself (via cwctl) after flipping state, so border
+    -- colors refresh for this and every other entry point uniformly.
     cwc.spawn_with_shell("~/.config/cwc/scripts/high-contrast.sh")
-    -- reload cwc config so border colors update
-    cwc.timer.new(0.5, function() cwc.reload() end, { one_shot = true })
 end, { description = "toggle high contrast mode", group = "launcher" })
 
 ------------------ MEDIA KEY -----------------------

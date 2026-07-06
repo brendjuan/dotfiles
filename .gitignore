@@ -24,6 +24,7 @@ git/.gitconfig-personal
 __pycache__/
 cwc/.config/cwc/waybar/style-active.css
 mako/.config/mako/config.bak
+kitty/.config/kitty/current-theme.conf
 
 # Backups from install.sh
 backups/
