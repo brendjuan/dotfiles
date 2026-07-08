@@ -74,6 +74,16 @@ echo ""
 echo "Restoring repo state (undoing any adopted diffs)..."
 git -C "$DOTFILES_DIR" checkout -- .
 
+# Seed the live wallpaper from the tracked default only if none exists yet.
+# wallpaper.png is gitignored, so pull/checkout never clobber a custom wallpaper;
+# a fresh clone gets the default, an existing squirrel is left untouched.
+WALLPAPER="$DOTFILES_DIR/cwc/.config/cwc/wallpaper.png"
+WALLPAPER_DEFAULT="$DOTFILES_DIR/cwc/.config/cwc/wallpaper.png.default"
+if [ ! -f "$WALLPAPER" ] && [ -f "$WALLPAPER_DEFAULT" ]; then
+    echo "No wallpaper.png found, seeding from default..."
+    cp "$WALLPAPER_DEFAULT" "$WALLPAPER"
+fi
+
 # Replace placeholders after checkout so the symlinked files get real values
 echo "Applying config..."
 sed -i "s|{{WORK_GIT_NAME}}|$WORK_GIT_NAME|g; s|{{WORK_GIT_EMAIL}}|$WORK_GIT_EMAIL|g" "$DOTFILES_DIR/git/.gitconfig"

@@ -33,3 +33,7 @@ backups/
 .stow-local-ignore
 
 lockscreen.png
+
+# Live wallpaper — set locally, don't let pull/checkout clobber it
+cwc/.config/cwc/wallpaper.png
+cwc/.config/cwc/wallpaper-inverted.png
