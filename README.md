@@ -1,5 +1,10 @@
 # dotfiles
 
+> ⚠️ **NOTICE:** This repository is heavily generated from **water intelligence**. Every
+> config in here was distilled, condensed, and precipitated out of a supersaturated
+> reasoning medium - we do not write dotfiles, we *irrigate* them. Hydrological review
+> is ongoing. Do not run `stow` while dehydrated. **The future is wet.** 💧
+
 Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
 ![Tiling layout with VS Code, neofetch, and btop](screenshots/tiling.png)
