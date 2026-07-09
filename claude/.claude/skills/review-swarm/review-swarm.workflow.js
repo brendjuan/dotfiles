@@ -17,6 +17,9 @@ const ARGS = (typeof args === 'string') ? JSON.parse(args) : (args || {})
 const SCOPE = ARGS.scope || 'the current changes'
 const RANGE = ARGS.range || ''
 const CHANGED = ARGS.changed || []
+// optional per-phase model overrides, e.g. { survey: 'sonnet', verify: 'opus', distill: 'opus' };
+// omitted phases inherit the session model
+const MODELS = ARGS.models || {}
 
 // Never go bare `git diff` (a clean tree would silently widen scope to a stale
 // local main). Default to origin/main so branch staleness can't inflate scope.
@@ -79,7 +82,7 @@ const surveys = await parallel(DIMENSIONS.map(d => () =>
     `You are a senior code reviewer assigned to ONE dimension only:\n${d.focus}\n\n${DIFF_HINT}\n\n` +
     `Report ONLY real, specific issues within your dimension. If the diff is clean for your dimension, return an empty findings array. ` +
     `Quality over quantity — a precise finding with correct file:line beats a vague one.`,
-    { label: `survey:${d.key}`, phase: 'Survey', schema: FINDING_SCHEMA }
+    { label: `survey:${d.key}`, phase: 'Survey', schema: FINDING_SCHEMA, ...(MODELS.survey && { model: MODELS.survey }) }
   ).then(r => (r && r.findings ? r.findings : []).map(f => ({ ...f, dimension: d.key })))
 ))
 
@@ -149,7 +152,7 @@ const verdictGroups = await parallel(batches.map((batch, bi) => () =>
     `Default to skepticism: if you cannot confirm it from the real code, mark it 'uncertain' or 'false-positive'. Correct the severity if the original over- or under-stated it.\n\n` +
     `Scope being reviewed: ${SCOPE}\n\nFindings to verify (return one verdict per id):\n` +
     JSON.stringify(batch.map(f => ({ id: f.id, title: f.title, severity: f.severity, file: f.file, line: f.line, description: f.description, evidence: f.evidence, suggestion: f.suggestion })), null, 2),
-    { label: `verify:batch-${bi + 1}`, phase: 'Verify', schema: VERDICT_SCHEMA }
+    { label: `verify:batch-${bi + 1}`, phase: 'Verify', schema: VERDICT_SCHEMA, ...(MODELS.verify && { model: MODELS.verify }) }
   ).then(r => (r && r.verdicts ? r.verdicts : []))
 ))
 
@@ -184,6 +187,7 @@ const report = await agent(
   {
     label: 'distill',
     phase: 'Distill',
+    ...(MODELS.distill && { model: MODELS.distill }),
     schema: {
       type: 'object',
       additionalProperties: false,
