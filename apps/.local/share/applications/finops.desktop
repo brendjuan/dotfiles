@@ -2,7 +2,7 @@
 Type=Application
 Name=FinOps
 Comment=FinOps financial operations
-Exec=/home/bjax/Applications/FinOps-2.5.2.AppImage --no-sandbox %U
+Exec=/home/bjax/Applications/FinOps-2.6.1.AppImage --no-sandbox %U
 Icon=/home/bjax/.local/share/icons/finops.png
 Terminal=false
 StartupWMClass=FinOps
