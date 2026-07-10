@@ -27,6 +27,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `cwc`      | CWC window compositor           |
 | `k4`       | `k4` script — launch kitty in a 2x2 grid |
 | `claude`   | Claude Code skills (`.claude/skills/`) — only skills, no creds/state |
+| `apps`     | Desktop entries (`.local/share/applications/`) so AppImages show up in rofi |
 | `awesome`  | **Legacy.** Awesome WM (overlay on [awesome-copycats](https://github.com/lcpz/awesome-copycats)) |
 
 > **Legacy:** `awesome/` is kept around for X11 fallback but is no longer the primary
@@ -69,6 +70,34 @@ The shell configs (`zsh`, `bash`) conditionally activate tools only if they are 
 - **[depot](https://depot.dev)** — `~/.depot/bin/`
 - **[mise](https://mise.jdx.dev)** — `~/.local/bin/mise`
 - **[pnpm](https://pnpm.io)** — `~/.local/share/pnpm/`
+
+## AppImage apps
+
+The `apps` package ships rofi launcher entries (GHOST, FinOps) but **not** the
+AppImage binaries or their icons — those are large and machine-local, so they
+stay out of the repo. Each `.desktop` file launches a *versionless symlink*
+(e.g. `~/Applications/FinOps.AppImage`), so the repo never encodes a version
+number. On a new machine, after `stow apps`:
+
+```bash
+mkdir -p ~/Applications
+mv ~/Downloads/FinOps-*.AppImage ~/Downloads/GHOST_*.AppImage ~/Applications/
+chmod +x ~/Applications/*.AppImage
+
+# Point the versionless names the .desktop files expect at the real files
+# (adjust the version in the target to match what you downloaded)
+ln -sfn FinOps-2.6.1.AppImage      ~/Applications/FinOps.AppImage
+ln -sfn GHOST_11.2.0_amd64.AppImage ~/Applications/GHOST.AppImage
+```
+
+Icons are optional — the entries reference `~/.local/share/icons/{finops,ghost}.png`;
+without them rofi just shows a blank icon. Extract with
+`~/Applications/GHOST.AppImage --appimage-extract '*.png'` if you want them.
+
+**Version bumps:** drop the new AppImage in `~/Applications/` and repoint the
+symlink (`ln -sfn <new-file> ~/Applications/FinOps.AppImage`). In-app self-updates
+that overwrite the file in place need nothing — the runtime resolves the symlink
+to the real target. No repo change either way.
 
 ## Stow individual packages
 
