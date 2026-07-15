@@ -1,13 +1,13 @@
 ---
 name: review-swarm
-description: Heavyweight multi-agent code review. Fans out 10 dimension-specialist reviewers over a diff in parallel, then runs a second wave of 7-10 adversarial verifiers that validate every finding against the real code, then distills the survivors into a full Markdown report (TL;DR on top) and shows a terminal summary. Use when the user runs /review-swarm, or asks for a thorough/exhaustive/multi-agent review of a branch, diff, PR, or path. For a quick single-pass review prefer /code-review.
+description: Heavyweight multi-agent code review. Fans out 15 dimension-specialist reviewers over a diff in parallel, then runs a second wave of 7-10 adversarial verifiers that validate every finding against the real code, then distills the survivors into a full Markdown report (TL;DR on top) and shows a terminal summary. Use when the user runs /review-swarm, or asks for a thorough/exhaustive/multi-agent review of a branch, diff, PR, or path. For a quick single-pass review prefer /code-review.
 ---
 
 # Review Swarm
 
 A three-stage, multi-agent review run through the **Workflow** engine:
 
-1. **Survey** — 10 reviewers, each owning one dimension (correctness, security, error-handling, concurrency, performance, api-design, data-integrity, tests, maintainability, deps-config), scan the diff in parallel.
+1. **Survey** — 15 reviewers, each owning one dimension (correctness, security, error-handling, concurrency, performance, api-design, data-integrity, tests, maintainability, deps-config, repo-conventions, dependency-idioms, consistency, dev-ux, frontend-ux), scan the diff in parallel. The last two self-gate — dev-ux/frontend-ux return nothing when the diff has no developer-facing or UI surface.
 2. **Verify** — the findings are deduped and sharded across **7-10 adversarial verifiers** that re-read the actual code and mark each finding `confirmed` / `false-positive` / `uncertain` (default to skepticism). This kills hallucinated and false-positive findings.
 3. **Distill** — a lead-reviewer agent synthesizes the confirmed findings into a full Markdown report with a `## TL;DR` at the top.
 
@@ -74,6 +74,6 @@ Workflow runs in the background; wait for the completion notification, then read
 ## Notes
 
 - The verification wave is the point — it's what makes the output trustworthy. Never present raw survey findings as if confirmed; only `confirmed` findings belong in the Findings section, with the rest under "Filtered out".
-- The finder count is fixed at 10 (one per dimension). The verifier count auto-scales to 7-10, dropping below 7 only when there are fewer than 7 findings total.
-- This is token-heavy (≈20+ agents). For a light pass, point the user at `/code-review` instead.
+- The finder count is fixed at 15 (one per dimension). The verifier count auto-scales to 7-10, dropping below 7 only when there are fewer than 7 findings total.
+- This is token-heavy (≈25+ agents: 15 finders + 7-10 verifiers + a distill). For a light pass, point the user at `/code-review` instead.
 - To tweak dimensions, severity rules, or counts, edit `review-swarm.workflow.js` next to this file and re-run — `scriptPath` always reads the latest version from disk.
