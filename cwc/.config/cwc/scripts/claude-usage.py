@@ -97,23 +97,26 @@ def emit(payload, error=None, stale=False):
     five_reset = fmt_reset((payload.get("five_hour") or {}).get("resets_at"))
     seven_reset = fmt_reset((payload.get("seven_day") or {}).get("resets_at"))
 
-    sonnet = util(payload.get("seven_day_sonnet"))
-    opus = util(payload.get("seven_day_opus"))
-
     lines = [
         f"CLAUDE :: session {five:.0f}% · week {seven:.0f}%",
         f"  session: {five:.0f}% (resets in {five_reset})",
         f"  weekly:  {seven:.0f}% (resets in {seven_reset})",
     ]
-    if sonnet is not None:
-        lines.append(f"  sonnet:  {sonnet:.0f}%")
-    if opus is not None:
-        lines.append(f"  opus:    {opus:.0f}%")
+    # per-model quotas moved from seven_day_{sonnet,opus} into limits[].scope
+    for lim in payload.get("limits") or []:
+        model = ((lim.get("scope") or {}).get("model") or {}).get("display_name")
+        if not model:
+            continue
+        label = model.lower() + ":"
+        lines.append(f"  {label:<9}{lim.get('percent') or 0:.0f}%"
+                     f" (resets in {fmt_reset(lim.get('resets_at'))})")
     extra = payload.get("extra_usage") or {}
     if extra.get("is_enabled"):
-        used = extra.get("used_credits") or 0
+        # used_credits/monthly_limit are minor units (cents when decimal_places=2)
+        scale = 10 ** (extra.get("decimal_places") or 2)
+        used = (extra.get("used_credits") or 0) / scale
         cap = extra.get("monthly_limit")
-        cap_s = f" / ${cap}" if cap else ""
+        cap_s = f" / ${cap / scale:.2f}" if cap else ""
         lines.append(f"  extra:   ${used:.2f}{cap_s} ({extra.get('currency','USD')})")
     if stale:
         lines.append(f"(cached — {error or 'fetch failed'})")

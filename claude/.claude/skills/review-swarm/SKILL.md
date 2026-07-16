@@ -46,6 +46,7 @@ Call the **Workflow** tool with the bundled script and the resolved scope as `ar
   - `scope`  — human description, e.g. `"branch feat/x vs origin/main"`
   - `range`  — the git range, e.g. `"origin/main...HEAD"` (use `""` for plain working-tree diff)
   - `changed` — the array of changed file paths from step 1 (pass `[]` if you couldn't enumerate them; the agents will discover them)
+  - `models` — optional per-phase overrides, e.g. `{ "survey": "sonnet" }`. Defaults: `survey` runs on **opus**, `verify` and `distill` on **sonnet**. Pass `null` for a phase to fall back to the session model.
 
 Example invocation shape (Workflow tool input):
 
@@ -75,5 +76,6 @@ Workflow runs in the background; wait for the completion notification, then read
 
 - The verification wave is the point — it's what makes the output trustworthy. Never present raw survey findings as if confirmed; only `confirmed` findings belong in the Findings section, with the rest under "Filtered out".
 - The finder count is fixed at 15 (one per dimension). The verifier count auto-scales to 7-10, dropping below 7 only when there are fewer than 7 findings total.
+- By default the 15 reviewers run on opus, and the verifiers and distiller on sonnet (see `args.models` above to change this per run).
 - This is token-heavy (≈25+ agents: 15 finders + 7-10 verifiers + a distill). For a light pass, point the user at `/code-review` instead.
 - To tweak dimensions, severity rules, or counts, edit `review-swarm.workflow.js` next to this file and re-run — `scriptPath` always reads the latest version from disk.

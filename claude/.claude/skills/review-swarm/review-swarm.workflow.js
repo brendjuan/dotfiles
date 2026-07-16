@@ -17,9 +17,10 @@ const ARGS = (typeof args === 'string') ? JSON.parse(args) : (args || {})
 const SCOPE = ARGS.scope || 'the current changes'
 const RANGE = ARGS.range || ''
 const CHANGED = ARGS.changed || []
-// optional per-phase model overrides, e.g. { survey: 'sonnet', verify: 'opus', distill: 'opus' };
-// omitted phases inherit the session model
-const MODELS = ARGS.models || {}
+// per-phase models: survey (reviewers) defaults to opus; verify (skeptics) and
+// distill to sonnet. Override via args.models, e.g. { survey: 'sonnet' };
+// pass null for a phase to fall back to the session model.
+const MODELS = { survey: 'opus', verify: 'sonnet', distill: 'sonnet', ...(ARGS.models || {}) }
 
 // Never go bare `git diff` (a clean tree would silently widen scope to a stale
 // local main). Default to origin/main so branch staleness can't inflate scope.
