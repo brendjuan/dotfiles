@@ -34,6 +34,10 @@ cwc.spawn_with_shell("mako")
 -- high-contrast mode once mako's socket is up if the state file says we're ON.
 cwc.spawn_with_shell("[ -f ~/.cache/high-contrast-mode ] && (sleep 0.5; makoctl mode -s highcontrast) || true")
 
+-- watch for hotplugged devices (usb + storage) and pop a mako notification
+-- naming what connected/disconnected. see scripts/device-notify.py.
+cwc.spawn_with_shell("~/.config/cwc/scripts/device-notify.py")
+
 -- for app that use tray better to wait for the bar to load
 cwc.timer.new(3, function()
     cwc.spawn { "copyq" }
