@@ -38,7 +38,7 @@ const DIFF_HINT =
   `Inspect the diff AND read enough surrounding code (whole functions, callers, tests) to judge correctly. ` +
   `Cite an exact file:line for every finding. Only report issues that the actual code supports — do not speculate.`
 
-const DIMENSIONS = [
+const ALL_DIMENSIONS = [
   { key: 'correctness',     focus: 'Logic & correctness bugs: off-by-one, inverted/incorrect conditionals, broken control flow, violated invariants, misused APIs, wrong return values or types.' },
   { key: 'security',        focus: 'Security: injection (SQL/shell/template), authz/authn gaps, secret/credential leakage, unsafe deserialization, path traversal, SSRF, unvalidated/untrusted input, crypto misuse.' },
   { key: 'error-handling',  focus: 'Error handling & edge cases: unhandled or swallowed errors, missing null/undefined guards, empty collections, boundary values, partial-failure and rollback paths.' },
@@ -55,6 +55,11 @@ const DIMENSIONS = [
   { key: 'dev-ux',          focus: 'Developer usability (DX) of anything developers consume — CLIs and code APIs. CLI ergonomics: clear --help, sensible subcommand/flag names and defaults, actionable error messages, correct exit codes, sane stdin/stdout/quiet/verbose behaviour. API ergonomics: discoverable, hard-to-misuse signatures, sensible defaults, clear failure modes, docstrings where behaviour is non-obvious. Flag confusing invocations, silent failures, and foot-guns. Calibrate to a developer audience: devs can absorb the occasional error or rough edge when running dev/build/test commands by hand — do NOT demand defensive gating, guard scripts, wrappers, or fail-safe scaffolding around a command just because it could error; a raw error that a dev can read and act on is fine. Reserve findings for genuine ergonomic foot-guns, not hand-holding. If the diff exposes no CLI or developer-facing API, return an empty findings array.' },
   { key: 'frontend-ux',     focus: 'End-user usability of frontend/UI code (JS/TS, HTML/CSS, React/Vue/Svelte/etc.): accessibility (semantic markup, labels, keyboard & focus handling, ARIA, colour contrast), loading/error/empty states, form validation and feedback, responsive layout, avoiding layout shift/jank, and clear affordances. Flag states that leave the user stuck or confused. If the diff contains no frontend/UI code, return an empty findings array.' },
 ]
+
+// Optionally scale the finder fleet: pass args.dimensions (array of keys) to run a subset.
+const DIMENSIONS = Array.isArray(ARGS.dimensions) && ARGS.dimensions.length
+  ? ALL_DIMENSIONS.filter(d => ARGS.dimensions.includes(d.key))
+  : ALL_DIMENSIONS
 
 const FINDING_SCHEMA = {
   type: 'object',
