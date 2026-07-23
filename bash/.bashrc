@@ -153,6 +153,10 @@ alias emacs="emacs -nw"
 export VISUAL="emacs -nw"
 export EDITOR="$VISUAL"
 
+# Obsidian vault location, plus a subfolder for Claude's internal memory
+export OBSIDIAN_VAULT="$HOME/Documents/Base"
+export CLAUDE_OBSIDIAN_VAULT="$OBSIDIAN_VAULT/Claude"
+
 # Gazebo performance: force OpenGL on integrated Intel GPUs
 if lspci 2>/dev/null | grep -qi 'VGA.*Intel' && ! lspci 2>/dev/null | grep -qi 'VGA.*NVIDIA\|VGA.*AMD.*Radeon'; then
   export LIBGL_ALWAYS_SOFTWARE=0
