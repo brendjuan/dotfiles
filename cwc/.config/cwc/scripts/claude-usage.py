@@ -124,7 +124,7 @@ def emit(payload, error=None, stale=False):
         lines.append(f"(error: {error})")
 
     sys.stdout.write(json.dumps({
-        "text": ICON,
+        "text": f"{ICON} {five:.0f}%",
         "tooltip": "\n".join(lines),
         "class": cls,
         "alt": cls,
