@@ -52,7 +52,9 @@ The workflow JS sandbox can't read env vars or run git — resolve these in the 
 
 ```sh
 VAULT="${CLAUDE_OBSIDIAN_VAULT:-$HOME/.claude/obsidian_vault}/conventions"
-REPO=$(basename "$ROOT")
+# Repo identity comes from the git remote name, NOT the checkout directory (they often differ).
+REPO=$(basename -s .git "$(git -C "$ROOT" config --get remote.origin.url 2>/dev/null)")
+[ -z "$REPO" ] && REPO=$(basename "$ROOT")   # fallback: no remote → directory name
 SHA=$(git rev-parse --short HEAD)
 mkdir -p "$VAULT"
 ```
@@ -65,11 +67,14 @@ mkdir -p "$VAULT"
 ### 3. Run the workflow
 
 - `scriptPath`: `/home/bjax/.claude/skills/convention-learn/convention-learn.workflow.js`
-- `args` (JSON **object**): always `vaultPath`, `repo`, `sha`; add `mode: "audit"` for an audit (omit for learn).
+- `args` (JSON **object**):
+  - always `vaultPath`, `repo`, `sha`;
+  - add `mode: "audit"` for an audit (omit for learn);
+  - optional `model` (`sonnet` | `opus` | `haiku` | `fable`) — the model the worker agents (mining/index/audit) run on. Omit to inherit the session model. The orchestrator (this main loop) is unaffected — it always runs on the session model. If the user names a worker model (e.g. "mine with sonnet"), pass it here; do **not** edit the script.
 
 ```json
 { "scriptPath": ".../convention-learn.workflow.js",
-  "args": { "vaultPath": "/home/bjax/Documents/Base/Claude/conventions", "repo": "myrepo", "sha": "35fa8a8" } }
+  "args": { "vaultPath": "/home/bjax/Documents/Base/Claude/conventions", "repo": "myrepo", "sha": "35fa8a8", "model": "sonnet" } }
 ```
 
 Runs in the background; on the completion notification read the returned object:
@@ -84,3 +89,4 @@ Report the counts and the vault path; the vault files are the deliverable. Point
 - **Non-destructive.** Re-running `learn` adds new `proposed` notes, refreshes evidence, bumps `updated_from_sha`, and marks vanished conventions `stale` — never overwriting a `verified`/`rejected` or hand-edited note.
 - **`learn` runs only on explicit request** — never automatically as part of a review. `convention-review` reads the vault; it does not build it.
 - **Dimension keys are a shared contract** with `convention-review` (they name the vault folders). If you change them here, change them there too.
+- **Model routing.** All worker agents share one model, set by `args.model` (default: inherit the session model). There is no per-dimension override — mining is uniform work, so a single knob is the right granularity. The orchestrator stays on the session model regardless.

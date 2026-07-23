@@ -2,10 +2,9 @@ export const meta = {
   name: 'convention-learn',
   description: 'Build/refresh (learn) and freshness-check (audit) the on-disk repo+ROS2 convention vault that convention-review consumes',
   phases: [
-    { title: 'Learn', detail: 'sonnet agents mine the repo + ROS2 and write one-rule-per-note into the vault', model: 'sonnet' },
-    { title: 'Critic', detail: 'opus reviewer verifies evidence, kills weak/duplicate rules, fixes frontmatter', model: 'opus' },
-    { title: 'Index', detail: 'write the per-repo _index.md dashboard', model: 'sonnet' },
-    { title: 'Audit', detail: 'grep-check each repo note\'s evidence still exists; flag drifted notes stale', model: 'sonnet' },
+    { title: 'Learn', detail: 'agents mine the repo + ROS2 and write one-rule-per-note into the vault' },
+    { title: 'Index', detail: 'write the per-repo _index.md dashboard' },
+    { title: 'Audit', detail: 'grep-check each repo note\'s evidence still exists; flag drifted notes stale' },
   ],
 }
 
@@ -14,6 +13,7 @@ const MODE = ARGS.mode || 'learn' // 'learn' | 'audit'
 const VAULT = ARGS.vaultPath || '' // resolved by the skill (env var or default)
 const REPO = ARGS.repo || 'repo' // basename of the repo root — the per-repo vault folder
 const SHA = ARGS.sha || '' // short HEAD sha, stamped onto repo notes for staleness tracking
+const MODEL = ARGS.model || undefined // worker model for the mining/index/audit agents; omit to inherit the session model
 
 if (!VAULT) throw new Error('convention-learn: requires args.vaultPath')
 
@@ -91,19 +91,6 @@ const AUDIT_SCHEMA = {
   },
 }
 
-const CRITIC_SCHEMA = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['dimension', 'reviewed', 'fixed', 'demoted'],
-  properties: {
-    dimension: { type: 'string' },
-    reviewed: { type: 'integer' },
-    fixed: { type: 'integer' },
-    demoted: { type: 'integer' },
-    issues: { type: 'array', items: { type: 'string' } },
-  },
-}
-
 const NOTE_FORMAT = `Note file format (YAML frontmatter + one paragraph of prose):
 ---
 id: <slug>                      # MUST equal the filename stem; kebab-case; stable across runs
@@ -153,25 +140,6 @@ RECONCILIATION (STRICTLY non-destructive — humans read and hand-edit these):
 Do NOT review any PR. Return the counts and the list of notes you created/updated/marked-stale.`
 }
 
-function criticPrompt(d) {
-  return `You are a SKEPTICAL senior ROS2 reviewer auditing the convention notes a junior agent just wrote for dimension "${d.key}". Your job is quality control, NOT re-mining. Be adversarial: a weak, unverifiable, or duplicate rule is worse than a missing one.
-
-VAULT folders to review (glob and read every .md in both):
-- Repo notes     -> ${REPO_DIR}/${d.key}/
-- ROS2-standard  -> ${ROS_DIR}/${d.key}/
-
-For EACH note (skip any with status 'verified' or 'rejected' — those are human-owned, never touch):
-1. VERIFY EVIDENCE. Open each 'file:line' citation. Confirm the cited line actually demonstrates the stated rule. If a repo note has fewer than 2 citations that genuinely support the rule, either find better ones (grep the repo) or set 'status: stale'.
-2. CHECKABLE? The rule must be a concrete, mechanically-checkable convention a reviewer could flag a PR against. Vague aspirations ("write clean code"), tautologies, or restatements of language syntax → set 'status: stale' and note why.
-3. DEDUPE. If two notes state the same rule, keep the better-evidenced one; set the other's 'status: stale'. Merge evidence into the keeper.
-4. FRONTMATTER HYGIENE. id must equal filename stem; repo notes carry updated_from_sha=${SHA} and NO standard_ref; ros2-standard notes carry standard_ref and NO updated_from_sha; source/severity_default present and sane.
-5. Fix prose that overstates ("always/never" the repo doesn't actually follow) to match the evidence.
-
-RULES: Only edit 'proposed'/'stale' notes. Never delete a file (demote to 'stale' instead). Never touch 'verified'/'rejected'. Keep edits minimal and surgical.
-
-Return: reviewed (notes examined), fixed (notes you edited: evidence/frontmatter/prose), demoted (notes you set to stale), and an 'issues' list of short human-readable findings.`
-}
-
 function auditPrompt(d) {
   return `You are auditing the FRESHNESS of the convention vault for dimension "${d.key}". This is mechanical — use Bash/git, not judgement calls.
 
@@ -190,7 +158,7 @@ if (MODE === 'audit') {
   log(`AUDIT → ${REPO_DIR}`)
   phase('Audit')
   const results = (await parallel(
-    DIMENSIONS.map((d) => () => agent(auditPrompt(d), { label: `audit:${d.key}`, phase: 'Audit', schema: AUDIT_SCHEMA, model: 'sonnet' }))
+    DIMENSIONS.map((d) => () => agent(auditPrompt(d), { label: `audit:${d.key}`, phase: 'Audit', schema: AUDIT_SCHEMA, model: MODEL }))
   )).filter(Boolean)
 
   const checked = results.reduce((n, r) => n + (r.checked || 0), 0)
@@ -210,7 +178,7 @@ if (MODE === 'audit') {
 log(`LEARN → vault ${REPO_DIR} (+ ${ROS_DIR}) @ ${SHA || 'no-sha'}`)
 phase('Learn')
 const results = (await parallel(
-  DIMENSIONS.map((d) => () => agent(learnPrompt(d), { label: `learn:${d.key}`, phase: 'Learn', schema: LEARN_SCHEMA, model: 'sonnet' }))
+  DIMENSIONS.map((d) => () => agent(learnPrompt(d), { label: `learn:${d.key}`, phase: 'Learn', schema: LEARN_SCHEMA, model: MODEL }))
 )).filter(Boolean)
 
 const created = results.reduce((n, r) => n + (r.created || 0), 0)
@@ -218,20 +186,11 @@ const updated = results.reduce((n, r) => n + (r.updated || 0), 0)
 const stale = results.reduce((n, r) => n + (r.stale || 0), 0)
 const allNotes = results.flatMap((r) => r.notes || [])
 
-phase('Critic')
-const critiques = (await parallel(
-  DIMENSIONS.map((d) => () => agent(criticPrompt(d), { label: `critic:${d.key}`, phase: 'Critic', schema: CRITIC_SCHEMA, model: 'opus', effort: 'high' }))
-)).filter(Boolean)
-const cReviewed = critiques.reduce((n, r) => n + (r.reviewed || 0), 0)
-const cFixed = critiques.reduce((n, r) => n + (r.fixed || 0), 0)
-const cDemoted = critiques.reduce((n, r) => n + (r.demoted || 0), 0)
-log(`CRITIC done: ${cReviewed} reviewed, ${cFixed} fixed, ${cDemoted} demoted to stale`)
-
 phase('Index')
 await agent(
   `Write/refresh the vault index at ${REPO_DIR}/_index.md — a human dashboard for this repo's conventions.
 Glob ${REPO_DIR}/*/*.md and ${ROS_DIR}/*/*.md, read each note's frontmatter, and write a Markdown table grouped by dimension listing: id, status, severity_default, source, and (repo notes) updated_from_sha. Add a top line with total counts by status. Overwrite _index.md. Return the word "done".`,
-  { label: 'index', phase: 'Index', model: 'sonnet' }
+  { label: 'index', phase: 'Index', model: MODEL }
 )
 
 log(`LEARN done: +${created} new, ~${updated} updated, ${stale} marked stale across ${results.length}/${DIMENSIONS.length} dimensions`)
@@ -240,7 +199,6 @@ return {
   vault: VAULT,
   repo: REPO,
   sha: SHA,
-  counts: { created, updated, stale: stale + cDemoted, notes: allNotes.length },
-  critic: { reviewed: cReviewed, fixed: cFixed, demoted: cDemoted, issues: critiques.flatMap((r) => r.issues || []) },
+  counts: { created, updated, stale, notes: allNotes.length },
   notes: allNotes,
 }
