@@ -77,15 +77,22 @@ Same rules as `/review-swarm`:
 git fetch --quiet origin 2>/dev/null
 BASE=origin/main; git rev-parse --verify --quiet origin/main >/dev/null || BASE=origin/master
 RANGE="$BASE...HEAD"
-git --no-pager diff --name-only "$RANGE"   # sanity-check non-empty
 git rev-parse --abbrev-ref HEAD            # branch, for the report filename
+FILES=$(git --no-pager diff --name-only "$RANGE" | grep -c .)   # changed-file count
+LINES=$(git --no-pager diff "$RANGE" | grep -cE '^[+-]')         # +/- line count
 ```
-Empty diff → nothing to review; stop.
+Empty diff (`FILES` = 0) → nothing to review; stop. Pass `FILES`/`LINES` as `changedFiles`/`diffLines` so the workflow scales its check fan-out to the diff size (see step 4).
 
 ### 4. Run the workflow
 
 - `scriptPath`: `/home/bjax/.claude/skills/convention-review/convention-review.workflow.js`
 - `args` (JSON **object**): always pass `vaultPath`, `repo`, `sha`. Add `mode` (omit for review), `range`, `scope`, `priorReviewPath` as relevant.
+- **Review fan-out scales with diff size.** Pass `changedFiles` and `diffLines` (the `FILES`/`LINES` from step 3) and the workflow buckets how many check agents run: **tiny** (≤2 files & ≤60 lines) → **1 agent covering all dimensions**, holistic folded in; **small** (≤6 & ≤250) → 3; **medium** (≤15 & ≤800) → 5; **large** → full 7 per-dimension + a separate holistic Fable pass. Omit the counts → full fan-out. Force it with `checkAgents: <n>`. (Applies to `review` only; `learn`/`audit` don't touch a diff.)
+- **Honor the user's fan-out request over the auto-scaling.** If the user's phrasing implies a specific depth, pass `checkAgents` and it wins over the size buckets:
+  - "full" / "thorough" / "per-dimension" / "don't cut corners" → `checkAgents: 7` (full per-dimension + holistic Fable).
+  - "quick" / "single-agent" / "one pass" / "cheap" → `checkAgents: 1` (one agent, all dimensions, holistic folded in).
+  - "N agents" / "split into N" → `checkAgents: N` (clamped to 1–7).
+  - No depth mentioned → omit `checkAgents` and let `changedFiles`/`diffLines` auto-scale.
 
 Learn:
 ```json
@@ -97,6 +104,7 @@ Review (default), optionally chained after a `/review-swarm` report:
 { "scriptPath": ".../convention-review.workflow.js",
   "args": { "vaultPath": "/home/bjax/Documents/Base/Claude/conventions", "repo": "myrepo", "sha": "35fa8a8",
             "range": "origin/main...HEAD", "scope": "branch feat/x vs origin/main",
+            "changedFiles": 4, "diffLines": 210,
             "priorReviewPath": "~/claude-reviews/2026-07-22/review-swarm-feat-x-....md" } }
 ```
 Audit:

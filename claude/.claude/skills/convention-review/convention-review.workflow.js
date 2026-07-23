@@ -188,25 +188,56 @@ const priorNote = PRIOR
   ? `\n\nA PRIOR review exists at ${PRIOR} — Read it. You may still report an overlapping convention deviation, but set overlaps_prior=true for those and PRIORITIZE new/unstated convention issues the prior review missed.`
   : ''
 
-function vaultReadNote(dim) {
-  return `AUTHORITATIVE CONVENTIONS live in the on-disk vault. Read them now (glob + read every file):
-- ${REPO_DIR}/${dim}/*.md
-- ${ROS_DIR}/${dim}/*.md
-Treat these notes as the source of truth. SKIP any note whose frontmatter has 'status: rejected'. Do NOT re-mine the repo to rediscover conventions — only open a specific sibling file when you must confirm a suspected deviation. If both folders are empty or missing, say so in your reasoning and fall back to your own ROS2 + repo knowledge for this dimension.`
+function vaultReadNotesFor(dims) {
+  const folders = dims
+    .map((d) => `- ${REPO_DIR}/${d.key}/*.md  and  ${ROS_DIR}/${d.key}/*.md   (dimension: ${d.key})`)
+    .join('\n')
+  return `AUTHORITATIVE CONVENTIONS live in the on-disk vault. Read the notes for the dimension(s) you own (glob + read every file):
+${folders}
+Treat these notes as the source of truth. SKIP any note whose frontmatter has 'status: rejected'. Do NOT re-mine the repo to rediscover conventions — only open a specific sibling file when you must confirm a suspected deviation. If a dimension's folders are empty or missing, say so and fall back to your own ROS2 + repo knowledge for that dimension.`
 }
 
-function checkPrompt(d) {
-  return `You are reviewing a PR for adherence to ESTABLISHED conventions for the dimension "${d.key}".
+function checkPromptFor(dims, foldHolistic) {
+  const focusList = dims.map((d) => `### ${d.key}\n${d.focus}`).join('\n\n')
+  const holistic = foldHolistic
+    ? `\n\nAlso apply a HOLISTIC lens: catch cross-cutting, unstated "everyone here just does it this way" conventions (naming parallelism, structural symmetry, idiomatic consistency between analogous files) even where they span dimensions.`
+    : ''
+  return `You are reviewing a PR for adherence to ESTABLISHED conventions for the following dimension(s):
 
-${vaultReadNote(d.key)}
+${focusList}
+
+${vaultReadNotesFor(dims)}
 
 Task:
 - List the PR's changed files: \`${FILES_CMD}\`; inspect the diff: \`${DIFF_CMD}\`.
-- For files relevant to "${d.key}", find DEVIATIONS from the vault conventions (and standard ROS2 idioms).
+- For files relevant to the dimension(s) above, find DEVIATIONS from the vault conventions (and standard ROS2 idioms).
 - Report ONLY real deviations from an established convention — not personal taste. For each finding, put the violated vault note's id (plus a short restatement) in 'convention', its evidence in 'convention_evidence', and the exact PR 'file'/'line'.
-- Prefer NEW/unstated issues; still valid to report known ones (mark overlaps_prior).${priorNote}
+- Prefer NEW/unstated issues; still valid to report known ones (mark overlaps_prior).${holistic}${priorNote}
 
 Read the actual files to confirm line numbers. Be precise and skeptical — a weak finding hurts the review.`
+}
+
+// Split the dimension list into contiguous groups so a single agent can own several dimensions on a small diff.
+function chunkContiguous(arr, n) {
+  const groups = Math.max(1, Math.min(n, arr.length))
+  const size = Math.ceil(arr.length / groups)
+  const out = []
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
+  return out
+}
+
+// How many check agents to fan out, scaled by diff size. args.checkAgents forces it; unknown size -> full per-dimension.
+function pickGroupCount() {
+  if (Number.isFinite(ARGS.checkAgents) && ARGS.checkAgents > 0) return Math.min(ARGS.checkAgents, DIMENSIONS.length)
+  const files = Number.isFinite(ARGS.changedFiles) ? ARGS.changedFiles : null
+  const lines = Number.isFinite(ARGS.diffLines) ? ARGS.diffLines : null
+  if (files == null && lines == null) return DIMENSIONS.length // unknown -> be thorough
+  const f = files == null ? 9999 : files
+  const l = lines == null ? 999999 : lines
+  if (f <= 2 && l <= 60) return 1 // tiny: one agent covers all dimensions
+  if (f <= 6 && l <= 250) return 3 // small
+  if (f <= 15 && l <= 800) return 5 // medium
+  return DIMENSIONS.length // large: full per-dimension
 }
 
 function holisticPrompt() {
@@ -295,12 +326,19 @@ if (!VAULT) {
   log('WARNING: no vaultPath provided — checkers will fall back to mining their own knowledge (no vault backbone).')
 }
 phase('Check')
-const checkThunks = DIMENSIONS.map((d) => () =>
-  agent(checkPrompt(d), { label: `check:${d.key}`, phase: 'Check', schema: FINDINGS_SCHEMA })
+const nGroups = pickGroupCount()
+const groups = chunkContiguous(DIMENSIONS, nGroups)
+// A single all-dimensions group (tiny diff) folds the holistic lens in; otherwise the holistic pass runs separately on Fable.
+const soloGroup = groups.length === 1
+log(`Check fan-out: ${groups.length} group(s) over ${DIMENSIONS.length} dimensions${soloGroup ? ' (holistic folded in)' : ' + holistic(fable)'} — files=${Number.isFinite(ARGS.changedFiles) ? ARGS.changedFiles : '?'} lines=${Number.isFinite(ARGS.diffLines) ? ARGS.diffLines : '?'}`)
+const checkThunks = groups.map((dims) => () =>
+  agent(checkPromptFor(dims, soloGroup), { label: `check:${dims.map((d) => d.key).join('+')}`, phase: 'Check', schema: FINDINGS_SCHEMA })
 )
-checkThunks.push(() =>
-  agent(holisticPrompt(), { label: 'check:holistic-fable', phase: 'Check', schema: FINDINGS_SCHEMA, model: 'fable' })
-)
+if (!soloGroup) {
+  checkThunks.push(() =>
+    agent(holisticPrompt(), { label: 'check:holistic-fable', phase: 'Check', schema: FINDINGS_SCHEMA, model: 'fable' })
+  )
+}
 const rawFindings = (await parallel(checkThunks)).filter(Boolean).flatMap((r) => r.findings || [])
 
 const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().slice(0, 50)
