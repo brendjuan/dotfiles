@@ -66,7 +66,7 @@ mkdir -p "$VAULT"
 
 - If the invocation args are exactly `learn`, `review`, or `audit`, use that as `mode` verbatim (default `review`).
 - User asks to **learn / (re)build / curate conventions**, or the vault has no `<repo>/` folder yet → **`learn`** (do this before the first review of a new repo).
-- User asks to **review a PR/branch/diff for conventions** → **`review`** (default). If `$VAULT/<repo>` is empty, run `learn` first (tell the user), or proceed and the checkers fall back to their own knowledge with a warning.
+- User asks to **review a PR/branch/diff for conventions** → **`review`** (default). **NEVER run `learn` as part of a review** — a review only *reads* the existing vault notes for the repo. If `$VAULT/<repo>` is empty or missing, proceed with the checkers' own-knowledge fallback (they warn), and tell the user the vault is empty and that they can run `learn` separately to populate it. Do not kick off `learn` on their behalf during a review.
 - User asks whether the **vault is stale / evidence still valid** → **`audit`**.
 
 ### 3. Scope (review mode)
@@ -117,7 +117,7 @@ Runs in the background; wait for the completion notification, then read the retu
 
 ## Notes
 
-- **Vault > re-mining.** `review` and the holistic pass consume vault notes and are told NOT to re-mine the repo — only to open a sibling file to confirm a specific deviation. Refresh the vault with `learn` when conventions drift (or when `audit` flags many stale notes), not on every review.
+- **Vault > re-mining.** `review` and the holistic pass consume vault notes and are told NOT to re-mine the repo — only to open a sibling file to confirm a specific deviation. **A review never runs `learn`.** Refreshing the vault via `learn` is always a separate, explicit action the user requests — do it when conventions drift or when `audit` flags many stale notes, never automatically as part of a review.
 - **Env var.** Conventions live under `$CLAUDE_OBSIDIAN_VAULT/conventions` (your Obsidian vault — already exported in your rc as `$OBSIDIAN_VAULT/Claude`), or `~/.claude/obsidian_vault/conventions` when the var is unset (untracked). Always a `conventions/` subfolder so it doesn't clutter the vault root.
 - **Non-destructive learn.** Re-running `learn` adds new `proposed` notes, refreshes evidence, bumps `updated_from_sha`, and marks vanished conventions `stale` — it never overwrites a `verified`/`rejected` or hand-edited note.
 - **Conventions/fit, not bugs.** Pair with `/review-swarm` (correctness/security). Chaining works well: `/review-swarm` first, then pass its report as `priorReviewPath`.
