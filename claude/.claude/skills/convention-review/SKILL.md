@@ -1,45 +1,17 @@
 ---
 name: convention-review
-description: Convention-adherence tooling for ROS2 (ament/colcon) repositories, backed by an on-disk convention vault. `learn` mines the repo + ROS2 standards and writes one-rule-per-note markdown into the vault; `review` (default) checks a PR diff against those notes, adversarially verifies each finding, and distills a Markdown report; `audit` grep-checks that each note's evidence still exists. Use when the user asks whether a branch/diff/PR follows the repo's conventions or idioms, runs /convention-review, or wants to (re)learn/curate the convention vault. For general correctness/security review prefer /review-swarm or /code-review.
+description: Review a PR/branch/diff for adherence to a ROS2 repo's established conventions, checked against the on-disk convention vault built by convention-learn. Per-dimension reviewers + a holistic Fable pass flag deviations, adversarial verifiers reject personal-taste/false-positive findings, and a lead distills a Markdown report. NEVER mines/learns conventions itself — it only reads the vault. Use when the user asks whether a branch/diff/PR follows the repo's conventions or idioms, or runs /convention-review. For correctness/security review prefer /review-swarm or /code-review; to build/refresh the vault use convention-learn.
 ---
 
 # Convention Review
 
-A convention knowledge **vault** on disk is the backbone. Two thin operations hang off it, plus a freshness check — all run through the **Workflow** engine:
+Checks a PR against the on-disk **convention vault** (built by `convention-learn`) — a *fit* review, not a bug hunt. Three stages through the **Workflow** engine:
 
-- **`learn`** — one agent per dimension mines the repo (+ ROS2 REPs/ament/rclpy) and **writes/reconciles one-rule-per-note** markdown files into the vault. Non-destructive: never clobbers a `verified`/`rejected` or hand-edited note.
-- **`review`** (default) — per-dimension reviewers + a holistic **Fable** pass read the vault notes as the source of truth and flag PR deviations; findings are deduped, adversarially verified against the real code, and distilled into a Markdown report with a `## TL;DR`.
-- **`audit`** — mechanical grep/git pass: for each repo note, checks its `evidence:` file:line still exists and marks drifted notes `status: stale`.
+1. **Check** — per-dimension reviewers + a holistic **Fable** pass read the vault notes as the source of truth and flag PR deviations. **They never re-mine the repo to (re)learn conventions** — only read a sibling file to confirm a specific deviation.
+2. **Verify** — findings are deduped and each is adversarially re-checked against the real code, rejecting personal taste / false positives.
+3. **Distill** — a lead synthesizes confirmed findings into a Markdown report with a `## TL;DR`.
 
-The vault is plain markdown (Obsidian-friendly, `[[links]]` between notes) — humans can read, correct, and veto rules. Nothing requires Obsidian.
-
-Dimensions: `package-metadata`, `ros-interfaces`, `node-implementation`, `launch-files`, `build-ci-docker`, `tests`, `python-style-structure` (+ a holistic Fable pass in `review`).
-
-Invoking this skill **authorizes the Workflow tool** for this run.
-
-## Vault layout
-
-```
-$CLAUDE_OBSIDIAN_VAULT/conventions/   # env var → your Obsidian vault; default ~/.claude/obsidian_vault/conventions (untracked)
-  ros2-standards/<dimension>/<slug>.md   # repo-INDEPENDENT — mined once, reused across every ROS2 repo; NO repo sha
-  <repo>/<dimension>/<slug>.md           # this repo's conventions; frontmatter stamps updated_from_sha
-  <repo>/_index.md                       # dashboard: notes by dimension/status
-```
-
-Note frontmatter (one rule per file):
-```yaml
----
-id: named-qos-profiles          # == filename stem, stable
-dimension: node-implementation
-status: proposed                # proposed | verified | rejected | stale  — review consumes ALL except 'rejected'
-severity_default: low
-source: repo-pattern            # repo-pattern | repo-rule-file | ros2-standard
-evidence: [src/some_pkg/some_pkg/some_node.py:44, src/other_pkg/src/other_node.cpp:210]
-updated_from_sha: 35fa8a8       # REPO notes ONLY (staleness tracking); OMITTED on ros2-standard notes
-standard_ref: REP-2004          # ros2-standard notes ONLY
----
-```
-`status` has no gate — every note counts except `rejected` (the human kill-switch). `verified` is an optional "a human checked this" marker.
+Invoking this skill **authorizes the Workflow tool**.
 
 ## Steps
 
@@ -51,55 +23,27 @@ ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || { echo "not a git repo"; ex
 ```
 Only continue on `ros2-repo: yes`; otherwise point the user at `/review-swarm` or `/code-review`.
 
-### 1. Resolve vault + repo identity (all modes)
-
-The workflow JS sandbox can't read env vars or run git — resolve these in the shell and pass them as `args`:
+### 1. Resolve vault, repo identity, and scope
 
 ```sh
 VAULT="${CLAUDE_OBSIDIAN_VAULT:-$HOME/.claude/obsidian_vault}/conventions"
-REPO=$(basename "$ROOT")
-SHA=$(git rev-parse --short HEAD)
-mkdir -p "$VAULT"
-```
-
-### 2. Pick the mode
-
-- If the invocation args are exactly `learn`, `review`, or `audit`, use that as `mode` verbatim (default `review`).
-- User asks to **learn / (re)build / curate conventions**, or the vault has no `<repo>/` folder yet → **`learn`** (do this before the first review of a new repo).
-- User asks to **review a PR/branch/diff for conventions** → **`review`** (default). **NEVER run `learn` as part of a review** — a review only *reads* the existing vault notes for the repo. If `$VAULT/<repo>` is empty or missing, proceed with the checkers' own-knowledge fallback (they warn), and tell the user the vault is empty and that they can run `learn` separately to populate it. Do not kick off `learn` on their behalf during a review.
-- User asks whether the **vault is stale / evidence still valid** → **`audit`**.
-
-### 3. Scope (review mode)
-
-Same rules as `/review-swarm`:
-- No args → `origin/main...HEAD`. Path/glob → still vs origin/main, note the path. Ref range → verbatim. `#123`/PR → `gh pr checkout`, then `origin/main...HEAD`. "uncommitted/staged" → `""`.
-```sh
+ROOT=$(git rev-parse --show-toplevel); REPO=$(basename "$ROOT"); SHA=$(git rev-parse --short HEAD)
 git fetch --quiet origin 2>/dev/null
 BASE=origin/main; git rev-parse --verify --quiet origin/main >/dev/null || BASE=origin/master
 RANGE="$BASE...HEAD"
-git rev-parse --abbrev-ref HEAD            # branch, for the report filename
-FILES=$(git --no-pager diff --name-only "$RANGE" | grep -c .)   # changed-file count
-LINES=$(git --no-pager diff "$RANGE" | grep -cE '^[+-]')         # +/- line count
+git rev-parse --abbrev-ref HEAD                                   # branch, for the report filename
+FILES=$(git --no-pager diff --name-only "$RANGE" | grep -c .)     # changed-file count
+LINES=$(git --no-pager diff "$RANGE" | grep -cE '^[+-]')          # +/- line count
 ```
-Empty diff (`FILES` = 0) → nothing to review; stop. Pass `FILES`/`LINES` as `changedFiles`/`diffLines` so the workflow scales its check fan-out to the diff size (see step 4).
+Scope rules (like `/review-swarm`): no args → `origin/main...HEAD`; path/glob → still vs origin/main, note the path; ref range → verbatim; `#123`/PR → `gh pr checkout`, then `origin/main...HEAD`; "uncommitted/staged" → `""`. Empty diff (`FILES` = 0) → nothing to review; stop.
 
-### 4. Run the workflow
+**Never run `convention-learn` from here.** If `$VAULT/<repo>` is empty/missing, proceed with the checkers' own-knowledge fallback (they warn) and tell the user to run `convention-learn` separately to populate it — do not build the vault on their behalf.
+
+### 2. Run the workflow
 
 - `scriptPath`: `/home/bjax/.claude/skills/convention-review/convention-review.workflow.js`
-- `args` (JSON **object**): always pass `vaultPath`, `repo`, `sha`. Add `mode` (omit for review), `range`, `scope`, `priorReviewPath` as relevant.
-- **Review fan-out scales with diff size.** Pass `changedFiles` and `diffLines` (the `FILES`/`LINES` from step 3) and the workflow buckets how many check agents run: **tiny** (≤2 files & ≤60 lines) → **1 agent covering all dimensions**, holistic folded in; **small** (≤6 & ≤250) → 3; **medium** (≤15 & ≤800) → 5; **large** → full 7 per-dimension + a separate holistic Fable pass. Omit the counts → full fan-out. Force it with `checkAgents: <n>`. (Applies to `review` only; `learn`/`audit` don't touch a diff.)
-- **Honor the user's fan-out request over the auto-scaling.** If the user's phrasing implies a specific depth, pass `checkAgents` and it wins over the size buckets:
-  - "full" / "thorough" / "per-dimension" / "don't cut corners" → `checkAgents: 7` (full per-dimension + holistic Fable).
-  - "quick" / "single-agent" / "one pass" / "cheap" → `checkAgents: 1` (one agent, all dimensions, holistic folded in).
-  - "N agents" / "split into N" → `checkAgents: N` (clamped to 1–7).
-  - No depth mentioned → omit `checkAgents` and let `changedFiles`/`diffLines` auto-scale.
+- `args` (JSON **object**): `vaultPath`, `repo`, `sha`, `range`, `scope`, `changedFiles` (=FILES), `diffLines` (=LINES); optional `priorReviewPath`, `checkAgents`.
 
-Learn:
-```json
-{ "scriptPath": ".../convention-review.workflow.js",
-  "args": { "mode": "learn", "vaultPath": "/home/bjax/Documents/Base/Claude/conventions", "repo": "myrepo", "sha": "35fa8a8" } }
-```
-Review (default), optionally chained after a `/review-swarm` report:
 ```json
 { "scriptPath": ".../convention-review.workflow.js",
   "args": { "vaultPath": "/home/bjax/Documents/Base/Claude/conventions", "repo": "myrepo", "sha": "35fa8a8",
@@ -107,26 +51,25 @@ Review (default), optionally chained after a `/review-swarm` report:
             "changedFiles": 4, "diffLines": 210,
             "priorReviewPath": "~/claude-reviews/2026-07-22/review-swarm-feat-x-....md" } }
 ```
-Audit:
-```json
-{ "scriptPath": ".../convention-review.workflow.js",
-  "args": { "mode": "audit", "vaultPath": "/home/bjax/Documents/Base/Claude/conventions", "repo": "myrepo" } }
-```
 
-Runs in the background; wait for the completion notification, then read the returned object.
-- `learn` / `audit` → `counts` (created/updated/stale, or checked/rotted/marked_stale). Report the counts and the vault path; the vault files are the deliverable.
-- `review` → `scope`, `range`, `counts` (`raw`/`deduped`/`confirmed`/`rejected`/`by_severity`), `report_markdown`, `confirmed_titles`.
+- **Fan-out scales with diff size** (pass `changedFiles`/`diffLines`): tiny (≤2 files & ≤60 lines) → 1 agent over all dimensions, holistic folded in; small (≤6 & ≤250) → 3; medium (≤15 & ≤800) → 5; large → full 7 per-dimension + a separate holistic Fable pass. Omit the counts → full fan-out.
+- **Honor the user's fan-out request** over the auto-scaling, via `checkAgents` (wins over the buckets):
+  - "full" / "thorough" / "per-dimension" → `checkAgents: 7`.
+  - "quick" / "single-agent" / "one pass" / "cheap" → `checkAgents: 1`.
+  - "N agents" / "split into N" → `checkAgents: N` (clamped 1–7).
+  - No depth mentioned → omit it and let the size counts auto-scale.
 
-### 5. Report (review mode)
+Runs in the background; on the completion notification read the returned object: `scope`, `range`, `counts` (`raw`/`deduped`/`confirmed`/`rejected`/`by_severity`), `report_markdown`, `confirmed_titles`.
+
+### 3. Report
 
 1. **Write** `report_markdown` to `~/claude-reviews/<YYYY-MM-DD>/convention-review-<branch>-<YYYYMMDD-HHMM>.md` (create the day folder; sanitize `/`→`-` in the branch).
 2. **Concise terminal summary** — severity tally, confirmed/rejected counts, the TL;DR, `confirmed_titles`, and the saved path. Don't paste the whole report.
-3. Offer next steps (apply fixes, promote/reject vault notes) but don't act without the user.
+3. Offer next steps (apply fixes; promote/reject vault notes via editing the vault) but don't act without the user.
 
 ## Notes
 
-- **Vault > re-mining.** `review` and the holistic pass consume vault notes and are told NOT to re-mine the repo — only to open a sibling file to confirm a specific deviation. **A review never runs `learn`.** Refreshing the vault via `learn` is always a separate, explicit action the user requests — do it when conventions drift or when `audit` flags many stale notes, never automatically as part of a review.
-- **Env var.** Conventions live under `$CLAUDE_OBSIDIAN_VAULT/conventions` (your Obsidian vault — already exported in your rc as `$OBSIDIAN_VAULT/Claude`), or `~/.claude/obsidian_vault/conventions` when the var is unset (untracked). Always a `conventions/` subfolder so it doesn't clutter the vault root.
-- **Non-destructive learn.** Re-running `learn` adds new `proposed` notes, refreshes evidence, bumps `updated_from_sha`, and marks vanished conventions `stale` — it never overwrites a `verified`/`rejected` or hand-edited note.
+- **Reads the vault, never builds it.** A review never runs `convention-learn`. Refreshing the vault is always a separate, explicit action — do it when conventions drift or `convention-learn audit` flags many stale notes.
+- **Env var.** Vault at `$CLAUDE_OBSIDIAN_VAULT/conventions` (default `~/.claude/obsidian_vault/conventions`) — same resolution as `convention-learn`.
 - **Conventions/fit, not bugs.** Pair with `/review-swarm` (correctness/security). Chaining works well: `/review-swarm` first, then pass its report as `priorReviewPath`.
-- To change dimensions, the note schema, or the holistic model, edit `convention-review.workflow.js` next to this file and re-run — `scriptPath` always reads the latest from disk.
+- **Dimension keys are a shared contract** with `convention-learn` (they name the vault folders). If you change them here, change them there too.
