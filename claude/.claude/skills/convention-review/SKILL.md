@@ -64,6 +64,7 @@ mkdir -p "$VAULT"
 
 ### 2. Pick the mode
 
+- If the invocation args are exactly `learn`, `review`, or `audit`, use that as `mode` verbatim (default `review`).
 - User asks to **learn / (re)build / curate conventions**, or the vault has no `<repo>/` folder yet → **`learn`** (do this before the first review of a new repo).
 - User asks to **review a PR/branch/diff for conventions** → **`review`** (default). If `$VAULT/<repo>` is empty, run `learn` first (tell the user), or proceed and the checkers fall back to their own knowledge with a warning.
 - User asks whether the **vault is stale / evidence still valid** → **`audit`**.
