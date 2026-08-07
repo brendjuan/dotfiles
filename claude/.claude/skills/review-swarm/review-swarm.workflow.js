@@ -149,8 +149,11 @@ const VERDICT_SCHEMA = {
   },
 }
 
-// shard findings across 7..10 verifiers (fewer only if there are fewer findings)
-const target = Math.min(10, Math.max(7, findings.length))
+// shard findings across 7..10 verifiers (fewer only if there are fewer findings).
+// args.verifiers overrides the target shard count for a lighter/heavier wave.
+const target = Number(ARGS.verifiers) > 0
+  ? Math.floor(Number(ARGS.verifiers))
+  : Math.min(10, Math.max(7, findings.length))
 const VCOUNT = Math.min(target, findings.length)
 const batches = Array.from({ length: VCOUNT }, () => [])
 findings.forEach((f, i) => { batches[i % VCOUNT].push(f) })
