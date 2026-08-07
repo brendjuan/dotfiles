@@ -13,7 +13,7 @@ const RANGE = ARGS.range || 'origin/main...HEAD'
 const PRIOR = ARGS.priorReviewPath || ''
 const SCOPE = ARGS.scope || RANGE
 const VAULT = ARGS.vaultPath || '' // resolved by the skill; the on-disk convention backbone (built by convention-learn)
-const REPO = ARGS.repo || 'repo' // basename of the repo root — the per-repo vault folder
+const REPO = ARGS.repo || 'repo' // canonical repo name (from the git remote, not the checkout dir) — the per-repo vault folder
 const SHA = ARGS.sha || '' // short HEAD sha the vault was last learned against (for the report header)
 
 const DIFF_CMD = RANGE ? `git --no-pager diff ${RANGE}` : 'git --no-pager diff'

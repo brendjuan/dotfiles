@@ -27,7 +27,10 @@ Only continue on `ros2-repo: yes`; otherwise point the user at `/review-swarm` o
 
 ```sh
 VAULT="${CLAUDE_OBSIDIAN_VAULT:-$HOME/.claude/obsidian_vault}/conventions"
-ROOT=$(git rev-parse --show-toplevel); REPO=$(basename "$ROOT"); SHA=$(git rev-parse --short HEAD)
+ROOT=$(git rev-parse --show-toplevel); SHA=$(git rev-parse --short HEAD)
+# Repo identity comes from the git remote name, NOT the checkout directory (they often differ) — must match convention-learn.
+REPO=$(basename -s .git "$(git -C "$ROOT" config --get remote.origin.url 2>/dev/null)")
+[ -z "$REPO" ] && REPO=$(basename "$ROOT")   # fallback: no remote → directory name
 git fetch --quiet origin 2>/dev/null
 BASE=origin/main; git rev-parse --verify --quiet origin/main >/dev/null || BASE=origin/master
 RANGE="$BASE...HEAD"
