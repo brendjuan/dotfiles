@@ -17,6 +17,7 @@ declare -A commands=(
     ["󱒈 Workspace Grid"]="__workspace_grid"
     ["󰐊 Review Grid"]="__review_grid"
     ["󰂺 Learn Conventions"]="__learn_conventions"
+    ["󰈈 Browse Reviews"]="~/.config/cwc/rofi/review-browser.sh"
     ["󰨞 VSCode Workspace"]="~/.config/cwc/rofi/vscode-workspace.sh"
     ["󰌁 High Contrast Toggle"]="~/.config/cwc/scripts/high-contrast.sh"
 )
