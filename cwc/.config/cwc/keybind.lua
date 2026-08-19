@@ -330,15 +330,18 @@ for i = 1, 9 do
     end, { description = "toggle focused client on tag #" .. i_str, group = "tag" })
 end
 
-local sim_toggle_next = 10
+-- sim tag indices, kept in sync with SIM_TAGS in rc.lua
+local SIM_TAG_CYCLE = { 10, 11, 12 }
+local sim_cycle_idx = 1
 kbd.bind(MODKEY, "0", function()
     local s = cwc.screen.focused()
-    if s.max_general_workspace < sim_toggle_next then
-        s.max_general_workspace = sim_toggle_next
+    local target = SIM_TAG_CYCLE[sim_cycle_idx]
+    if s.max_general_workspace < target then
+        s.max_general_workspace = target
     end
-    s:get_tag(sim_toggle_next):view_only()
-    sim_toggle_next = (sim_toggle_next == 10) and 11 or 10
-end, { description = "toggle between sim tags (GZ/RV)", group = "tag" })
+    s:get_tag(target):view_only()
+    sim_cycle_idx = (sim_cycle_idx % #SIM_TAG_CYCLE) + 1
+end, { description = "cycle through sim tags (GZ/RV/FG)", group = "tag" })
 
 kbd.bind({ MODKEY, mod.SHIFT }, "0", function()
     local scrs = cwc.screen.get()

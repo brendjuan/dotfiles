@@ -105,8 +105,8 @@ cwc.connect_signal("screen::new", function(screen)
     -- don't apply if restored since it will reset whats manually changed
     if screen.restored then return end
 
-    -- set all tags (including sim tags 10-11) to master/stack mode by default
-    for i = 1, 11 do
+    -- set all tags (including sim tags 10-12) to master/stack mode by default
+    for i = 1, 12 do
         tag.layout_mode(i, enum.layout_mode.MASTER, screen)
     end
 
@@ -121,19 +121,22 @@ end)
 -- end)
 
 --------------------------- ROS SIMULATION TAGS ----------------------------
--- Ephemeral tags for Gazebo and RViz launched by `task gazebo:sim:rviz`.
+-- Ephemeral tags for Gazebo, RViz and Foxglove. Gazebo/RViz come from
+-- `task gazebo:sim:rviz`; Foxglove is launched on its own.
 -- Tags appear when sim windows map and vanish when all sim windows close.
 
 local DEFAULT_MAX_WORKSPACE = 9
 
 local SIM_TAGS = {
-    gazebo = 10,
-    rviz   = 11,
+    gazebo   = 10,
+    rviz     = 11,
+    foxglove = 12,
 }
 
 local SIM_TAG_LABELS = {
     [10] = "GZ",
     [11] = "RV",
+    [12] = "FG",
 }
 
 --- Return the sim tag index for a client, or nil if not a sim window.
@@ -144,6 +147,8 @@ local function sim_tag_for(client)
     -- often includes "gazebo" (e.g. ghostfin_gazebo/config/ghostfin.rviz)
     if aid:match("rviz") then
         return SIM_TAGS.rviz
+    elseif aid:match("foxglove") then
+        return SIM_TAGS.foxglove
     elseif aid:match("gz") or aid:match("gazebo") then
         return SIM_TAGS.gazebo
     end
