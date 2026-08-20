@@ -127,6 +127,42 @@ window#waybar {
     color: #ffffff;
 }
 
+#custom-ccm-battery {
+    /* CCM pack telemetry off ros2 — same chip treatment as github */
+    padding: 0 6px;
+    margin: 2px 0;
+    font-size: 12px;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #999999;
+}
+
+#custom-ccm-battery.green {
+    background-color: #008833;
+    color: #ffffff;
+}
+
+#custom-ccm-battery.yellow {
+    background-color: #cc8800;
+    color: #ffffff;
+}
+
+#custom-ccm-battery.orange {
+    background-color: #cc5500;
+    color: #ffffff;
+}
+
+#custom-ccm-battery.red {
+    background-color: #cc0000;
+    color: #ffffff;
+}
+
+#custom-ccm-battery.down {
+    /* no comms to the pack — chip stays, lights go out (matches glitchcore) */
+    background-color: #cccccc;
+    color: #555555;
+}
+
 #custom-claude-usage {
     /* claude session/weekly limit telemetry — same chip treatment as github.
        (was missing here, so the chip lost its badge and vanished in sunlight mode) */

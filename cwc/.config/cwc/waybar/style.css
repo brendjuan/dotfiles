@@ -142,6 +142,48 @@ window#waybar {
     color: #020008;
 }
 
+#custom-ccm-battery {
+    /* CCM pack telemetry off ros2 — volts and amps, same chip treatment.
+       flush against both neighbours; claude-usage keeps the 4px outer gap */
+    padding: 0 6px;
+    margin: 2px 0;
+    font-size: 12px;
+    font-weight: bold;
+    color: #020008;
+    background-color: rgba(0, 255, 180, 0.22);
+}
+
+#custom-ccm-battery.green {
+    /* pack above 50% — plenty of electrons */
+    background-color: #00ffb4;
+    color: #020008;
+}
+
+#custom-ccm-battery.yellow {
+    /* 30–50% — start thinking about the charger */
+    background-color: #ffd000;
+    color: #020008;
+}
+
+#custom-ccm-battery.orange {
+    /* 15–30% — the boat is getting thirsty */
+    background-color: #ff5500;
+    color: #020008;
+}
+
+#custom-ccm-battery.red {
+    /* under 15% — SURFACE NOW */
+    background-color: #ff0050;
+    color: #020008;
+}
+
+#custom-ccm-battery.down {
+    /* no comms to the pack — chip stays, lights go out. keeps the cluster solid
+       so nothing jumps sideways when the boat wakes up */
+    background-color: rgba(0, 255, 180, 0.22);
+    color: rgba(0, 255, 180, 0.45);
+}
+
 #custom-claude-usage {
     /* claude session/weekly limit telemetry — same chip treatment */
     padding: 0 8px 0 4px;  /* brain sits ~2px right of center — nudge left */
