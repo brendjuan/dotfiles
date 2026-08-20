@@ -61,7 +61,15 @@ Available variables:
 | `WORK_GIT_EMAIL` | `.gitconfig` | Default git author email |
 | `PERSONAL_GIT_NAME` | `.gitconfig-personal` | Git identity for `~/Personal/` repos |
 | `PERSONAL_GIT_EMAIL` | `.gitconfig-personal` | Git email for `~/Personal/` repos |
-| `CYCLONEDDS_URI` | `.zshrc`, `.bashrc` | CycloneDDS config file URI |
+| `CYCLONEDDS_URI` | `~/.config/dotfiles/env.sh` | CycloneDDS config file URI |
+
+`install.sh` substitutes the four git values directly into `git/.gitconfig` and
+`git/.gitconfig-personal`. Both files are marked `skip-worktree`, so the change
+does not dirty the repository.
+
+`CYCLONEDDS_URI` is handled differently. `.zshrc` and `.bashrc` are tracked and
+edited often, so `install.sh` must not rewrite them. It writes the value to
+`~/.config/dotfiles/env.sh` instead, which both files source when it exists.
 
 ## Conditional tool setup
 

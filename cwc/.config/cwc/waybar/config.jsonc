@@ -7,7 +7,7 @@
     "height": 16,
     "modules-left": ["dwl/tags"],
     "modules-center": ["wlr/taskbar"],
-    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "custom/github", "custom/claude-usage", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "custom/github", "custom/ccm-battery", "custom/claude-usage", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
 
     "tray": {
         "icon-size": 14,
@@ -47,6 +47,17 @@
         "return-type": "json",
         "interval": 600,
         "on-click": "~/.config/cwc/scripts/package-tracker.py --open"
+    },
+
+    "custom/ccm-battery": {
+        // pack volts + amps off ros2 /ccm/battery. continuous module: the script
+        // stays alive and sets its own cadence (1s live, 30s while the topic is
+        // dead), so there is no "interval" here on purpose. restart-interval only
+        // covers the script exiting — e.g. ros not installed yet.
+        "exec": "~/.config/cwc/scripts/ccm-battery.py",
+        "return-type": "json",
+        "restart-interval": 30,
+        "on-click": "kitty --app-id float-term --title 'CCM BATTERY' -o initial_window_width=92c -o initial_window_height=28c ~/.config/cwc/scripts/ccm-battery.py --echo"
     },
 
     "custom/claude-usage": {

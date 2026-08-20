@@ -1,0 +1,13 @@
+# Local override of /usr/share/applications/signal-desktop.desktop:
+# adds WebRTCPipeWireCapturer so screensharing goes through the
+# xdg-desktop-portal -> pipewire path on Wayland.
+[Desktop Entry]
+Name=Signal
+Exec=/opt/Signal/signal-desktop --enable-features=WebRTCPipeWireCapturer %U
+Terminal=false
+Type=Application
+Icon=signal-desktop
+StartupWMClass=signal
+Comment=Private messaging from your desktop
+MimeType=x-scheme-handler/sgnl;x-scheme-handler/signalcaptcha;
+Categories=Network;InstantMessaging;Chat;

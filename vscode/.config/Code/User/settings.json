@@ -1,4 +1,5 @@
 {
     "workbench.secondarySideBar.defaultVisibility": "hidden",
-    "claudeCode.preferredLocation": "panel"
+    "claudeCode.preferredLocation": "panel",
+    "workbench.colorTheme": "Default High Contrast Light"
 }
