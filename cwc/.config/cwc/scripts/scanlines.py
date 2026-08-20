@@ -18,6 +18,7 @@ Flags:
 
 import argparse
 import math
+import os
 import random
 import signal
 import time
@@ -32,9 +33,20 @@ import cairo  # noqa: E402
 FRAME_MS = 33  # ~30fps — only used when animated
 
 
+# ~/.cache/high-contrast-mode exists == sunlight mode ON. battery.lua respawns
+# this overlay on a toggle, so reading the state once at startup is enough.
+HIGH_CONTRAST = os.path.exists(os.path.expanduser("~/.cache/high-contrast-mode"))
+HC_ALPHA_SCALE = 0.45
+
+
 class Scanlines(Gtk.Window):
     def __init__(self, alpha, step, scroll, hum_bar, glitch_roll, monitor=None):
         super().__init__()
+
+        # These lines are black, so keep the pattern but cut the darkening in
+        # sunlight mode. Every derived peak scales off self.alpha.
+        if HIGH_CONTRAST:
+            alpha *= HC_ALPHA_SCALE
         self.alpha = alpha
         self.step = max(1, step)
         self.scroll = scroll

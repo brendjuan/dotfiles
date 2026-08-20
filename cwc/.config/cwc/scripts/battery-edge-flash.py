@@ -20,6 +20,7 @@ Requires: python-gobject + gtk-layer-shell (verified at config time).
 """
 
 import math
+import os
 import random
 import signal
 import time
@@ -38,12 +39,24 @@ import cairo  # noqa: E402
 # Pango which respects the whole chain.
 CORNER_FONT = "Hack Nerd Font, Noto Sans CJK JP Bold 11"
 
-# glitchcore palette — matches waybar + rofi
-RED = (1.0, 0.0, 0.314)      # #ff0050
-CYAN = (0.0, 1.0, 0.706)     # #00ffb4
-AMBER = (1.0, 0.333, 0.0)    # #ff5500
-WHITE = (1.0, 1.0, 1.0)
-BLACK = (0.0, 0.0, 0.0)
+# Sunlight mode needs dark inks: a teal edge pulse on a white desktop is almost
+# invisible, and this is a battery warning. battery.lua respawns us on a toggle.
+HIGH_CONTRAST = os.path.exists(os.path.expanduser("~/.cache/high-contrast-mode"))
+
+if HIGH_CONTRAST:
+    # WHITE/BLACK swap roles: the bright accent on a light desktop is ink
+    RED = (0.667, 0.0, 0.0)      # #aa0000
+    CYAN = (0.0, 0.0, 0.667)     # #0000aa
+    AMBER = (0.533, 0.4, 0.0)    # #886600
+    WHITE = (0.0, 0.0, 0.0)
+    BLACK = (1.0, 1.0, 1.0)
+else:
+    # glitchcore palette — matches waybar + rofi
+    RED = (1.0, 0.0, 0.314)      # #ff0050
+    CYAN = (0.0, 1.0, 0.706)     # #00ffb4
+    AMBER = (1.0, 0.333, 0.0)    # #ff5500
+    WHITE = (1.0, 1.0, 1.0)
+    BLACK = (0.0, 0.0, 0.0)
 
 EDGE_PX = 32           # how thick the border band is
 PULSE_PERIOD = 0.85    # seconds per full cosine cycle

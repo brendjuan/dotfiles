@@ -1,0 +1,47 @@
+# High-contrast "sunlight" variant of ./config, chosen by scripts/lock.sh. The
+# image stays; the problem was the indicator, so every color below is opaque.
+
+image=~/.config/swaylock/img/lockscreen.png
+scaling=fill
+
+indicator-radius=169
+indicator-thickness=42
+indicator-idle-visible
+
+show-failed-attempts
+
+# ---- IDLE ----
+# white plate, black ring and text
+inside-color=ffffffff
+ring-color=000000ff
+line-uses-inside
+text-color=000000ff
+separator-color=888888ff
+font=monospace
+font-size=32
+
+# ---- TYPING ----
+# accent blue ring, matching kitty highcontrast.conf selection color
+inside-ver-color=ffffffff
+ring-ver-color=0055aaff
+text-ver-color=000000ff
+key-hl-color=0055aaff
+
+# ---- WRONG ----
+inside-wrong-color=ffffffff
+ring-wrong-color=aa0000ff
+text-wrong-color=aa0000ff
+bs-hl-color=aa0000ff
+
+# ---- CLEARED ----
+inside-clear-color=ffffffff
+ring-clear-color=006600ff
+text-clear-color=006600ff
+
+# ---- CAPS LOCK ----
+ring-caps-lock-color=886600ff
+inside-caps-lock-color=ffffffff
+text-caps-lock-color=886600ff
+caps-lock-bs-hl-color=aa0000ff
+caps-lock-key-hl-color=0055aaff
+indicator-caps-lock

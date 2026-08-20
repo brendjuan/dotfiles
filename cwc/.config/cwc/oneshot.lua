@@ -25,8 +25,23 @@ if [ -f ~/.cache/high-contrast-mode ]; then
 else
     cp ~/.config/kitty/dark.conf ~/.config/kitty/current-theme.conf
 fi]])
--- seed active waybar style if it doesn't exist (first boot or stow refresh)
-cwc.spawn_with_shell("[ -f ~/.config/cwc/waybar/style-active.css ] || cp ~/.config/cwc/waybar/style.css ~/.config/cwc/waybar/style-active.css")
+-- seed active waybar style if missing (first boot or stow refresh). Pick it by
+-- state, like the kitty seed above, or waybar comes up dark on a light desktop.
+cwc.spawn_with_shell([[
+if [ ! -f ~/.config/cwc/waybar/style-active.css ]; then
+    if [ -f ~/.cache/high-contrast-mode ]; then
+        cp ~/.config/cwc/waybar/style-highcontrast.css ~/.config/cwc/waybar/style-active.css
+    else
+        cp ~/.config/cwc/waybar/style.css ~/.config/cwc/waybar/style-active.css
+    fi
+fi]])
+-- GTK/libadwaita apps read the desktop color-scheme; seed it from state.
+cwc.spawn_with_shell([[
+if [ -f ~/.cache/high-contrast-mode ]; then
+    gsettings set org.gnome.desktop.interface color-scheme prefer-light
+else
+    gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+fi]])
 cwc.spawn_with_shell("waybar -c ~/.config/cwc/waybar/config.jsonc -s ~/.config/cwc/waybar/style-active.css")
 cwc.spawn_with_shell("playerctld daemon")
 cwc.spawn_with_shell("mako")
@@ -50,8 +65,9 @@ cwc.setenv("HYPRCURSOR_THEME", "Bibata-Modern-Classic")
 cwc.spawn_with_shell(
     "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
 
--- swayidle: lock screen before sleep (lid close)
-cwc.spawn_with_shell('swayidle -w before-sleep "swaylock -f"')
+-- swayidle: lock before sleep (lid close), through lock.sh so it honours state.
+-- $HOME, not ~: the outer shell expands it, so swayidle gets an absolute path.
+cwc.spawn_with_shell('swayidle -w before-sleep "$HOME/.config/cwc/scripts/lock.sh -f"')
 
 -- polkit auth agent: without it, pkexec dies with "No session for cookie"
 -- and every privileged GUI (gparted, blueman, etc) has no way to prompt.
