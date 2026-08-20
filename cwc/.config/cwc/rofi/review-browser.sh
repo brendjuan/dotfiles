@@ -6,17 +6,23 @@
 REVIEW_DIR="$HOME/claude-reviews"
 [[ -d "$REVIEW_DIR" ]] || { notify-send "review-browser" "No $REVIEW_DIR directory"; exit 1; }
 
+# menu theme, row colors and the glow reader all follow high-contrast state
+source "$(dirname "${BASH_SOURCE[0]}")/palette.sh"
+
 if [ -f "$HOME/.cache/high-contrast-mode" ]; then
     THEME="$HOME/.config/cwc/rofi/highcontrast.rasi"
+    GLAMOUR="$HOME/.config/cwc/rofi/highcontrast.glamour.json"
+    READER_BG="#ffffff"
+    READER_FG="#000000"
+    READER_OPACITY="1.0"
 else
     THEME="$HOME/.config/cwc/rofi/glitchcore.rasi"
+    GLAMOUR="$HOME/.config/cwc/rofi/glitchcore.glamour.json"
+    READER_BG="#020008"
+    READER_FG="#b8ffe6"
+    READER_OPACITY="0.96"
 fi
 ROFI_OPTS=(-theme "$THEME" -normal-window -steal-focus -i -markup-rows)
-
-TEAL="#00ffb4"
-RED="#ff0050"
-AMBER="#ff5500"
-GHOST="#00ffb470"
 
 # newest first — mtime, not filename, because timestamp suffixes are inconsistent
 mapfile -t files < <(find "$REVIEW_DIR" -mindepth 2 -maxdepth 2 -name '*.md' -printf '%T@\t%p\n' | sort -rn | cut -f2)
@@ -46,17 +52,17 @@ for f in "${files[@]}"; do
         (( h > 0 )) && tally+="${h}H "
         (( m > 0 )) && tally+="${m}M "
         (( l > 0 )) && tally+="${l}L "
-        if (( c > 0 || h > 0 )); then col="$RED"
-        elif (( m > 0 ));           then col="$AMBER"
-        else                             col="$TEAL"
+        if (( c > 0 || h > 0 )); then col="$ALERT"
+        elif (( m > 0 ));           then col="$WARN"
+        else                             col="$OK"
         fi
-        [[ -z "$tally" ]] && tally="clean " && col="$GHOST"
+        [[ -z "$tally" ]] && tally="clean " && col="$DIM"
     else
-        tally="?? " col="$GHOST"
+        tally="?? " col="$DIM"
     fi
 
     rows+=$(printf '<b>%s</b>  <span size="small" foreground="%s">%s · %s</span>  <span foreground="%s"><b>%s</b></span>' \
-        "$name" "$GHOST" "$kind" "$date" "$col" "${tally% }")$'\n'
+        "$name" "$DIM" "$kind" "$date" "$col" "${tally% }")$'\n'
 done
 
 # -format i → row index, so no markup-stripping gymnastics to recover the path
@@ -68,12 +74,12 @@ action=$(printf '%s\n' "󰈈 Read" "󰨞 Open in VSCode" "󰅍 Copy path" | \
     rofi -dmenu -p "$(basename "$file" .md)" "${ROFI_OPTS[@]}")
 case "$action" in
     "󰈈 Read")
-        # themed reader: void-black kitty + glitchcore glamour style, paged
+        # themed reader: kitty + matching glamour style, paged
         exec kitty --class float-term -o remember_window_size=no \
             -o initial_window_width=112c -o initial_window_height=44c \
-            -o background='#020008' -o foreground='#b8ffe6' \
-            -o background_opacity=0.96 -o window_padding_width=14 \
-            -e env GLAMOUR_STYLE="$HOME/.config/cwc/rofi/glitchcore.glamour.json" \
+            -o background="$READER_BG" -o foreground="$READER_FG" \
+            -o background_opacity="$READER_OPACITY" -o window_padding_width=14 \
+            -e env GLAMOUR_STYLE="$GLAMOUR" \
             glow -p -w 104 "$file" ;;
     "󰨞 Open in VSCode")
         exec code "$file" ;;

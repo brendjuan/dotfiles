@@ -5,7 +5,8 @@
 #
 # Source of truth: the state file ~/.cache/high-contrast-mode. Its EXISTENCE ==
 # ON. That contract is also read by rc.lua (border colors), rofi/commands.sh,
-# rofi/vscode-workspace.sh, scripts/cheatsheet.sh, and the MOD+R launcher.
+# rofi/vscode-workspace.sh, rofi/palette.sh, scripts/cheatsheet.sh,
+# scripts/lock.sh, the battery overlays, and the MOD+R launcher.
 #
 # Design notes:
 #  - Never mutates stow-tracked source files. kitty uses a gitignored
@@ -69,6 +70,14 @@ apply_kitty_colors() {
     [ "$found" = 0 ] && log "no live kitty sockets"
 }
 
+# ── gtk apps ──────────────────────────────────────────────────────────
+# GTK/libadwaita apps follow the desktop color-scheme. GTK3 apps may ignore it.
+apply_gtk_color_scheme() {  # $1 = prefer-dark | prefer-light
+    command -v gsettings >/dev/null 2>&1 || { log "gsettings not found; skipping gtk color-scheme"; return; }
+    gsettings set org.gnome.desktop.interface color-scheme "$1" >>"$LOG_FILE" 2>&1 \
+        || log "gsettings color-scheme $1 failed"
+}
+
 # ── vscode ────────────────────────────────────────────────────────────
 # Edit settings.json in place, preserving the stow symlink (write to its target,
 # atomic rename on the same filesystem) and VS Code's 4-space formatting so the
@@ -128,6 +137,7 @@ enable_high_contrast() {
     killall -SIGUSR2 waybar 2>/dev/null
 
     apply_kitty_colors "$KITTY_DIR/highcontrast.conf" "$KITTY_OPACITY_HIGHCONTRAST"
+    apply_gtk_color_scheme prefer-light
 
     makoctl mode -a highcontrast >>"$LOG_FILE" 2>&1 || log "makoctl mode -a failed"
 
@@ -152,6 +162,7 @@ disable_high_contrast() {
     killall -SIGUSR2 waybar 2>/dev/null
 
     apply_kitty_colors "$KITTY_DIR/dark.conf" "$KITTY_OPACITY_DEFAULT"
+    apply_gtk_color_scheme prefer-dark
 
     makoctl mode -r highcontrast >>"$LOG_FILE" 2>&1 || log "makoctl mode -r failed"
 

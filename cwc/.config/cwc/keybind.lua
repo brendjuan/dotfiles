@@ -29,7 +29,7 @@ kbd.bind({ MODKEY }, "Delete", function()
 end, { description = "trigger lua garbage collection", group = "cwc" })
 
 kbd.bind({ MODKEY, mod.SHIFT }, "Delete", function()
-    cwc.spawn_with_shell("swaylock")
+    cwc.spawn_with_shell("~/.config/cwc/scripts/lock.sh")
 end, { description = "lock screen", group = "cwc" })
 
 kbd.bind({ MODKEY }, "Escape", function()
@@ -456,7 +456,10 @@ bind_release(MODKEY, "r", function()
         'pkill rofi; sleep 0.05 && '
         .. 'TH=~/.config/cwc/rofi/glitchcore.rasi; '
         .. '[ -f ~/.cache/high-contrast-mode ] && TH=~/.config/cwc/rofi/highcontrast.rasi; '
-        .. 'rofi -show drun -icon-theme "Papirus-dark" -show-icons -normal-window -steal-focus -theme "$TH"')
+        -- Papirus is not installed here, so the old "Papirus-dark" did nothing.
+        .. 'IC=breeze-dark; '
+        .. '[ -f ~/.cache/high-contrast-mode ] && IC=breeze; '
+        .. 'rofi -show drun -icon-theme "$IC" -show-icons -normal-window -steal-focus -theme "$TH"')
 end, { description = "application launcher", group = "launcher" })
 
 bind_release(MODKEY, "c", function()

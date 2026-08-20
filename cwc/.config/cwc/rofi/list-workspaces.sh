@@ -15,15 +15,18 @@ if [[ "$1" == "strip" ]]; then
     exit 0
 fi
 
+# row colors follow high-contrast state; neon is unreadable on the white theme
+source "$(dirname "${BASH_SOURCE[0]}")/palette.sh"
+
 WS_DIR="$1"
 [[ -z "$WS_DIR" || ! -d "$WS_DIR" ]] && exit 1
 
 while IFS= read -r name; do
     branch=$(git -C "$WS_DIR/$name" branch --show-current 2>/dev/null)
     if [[ -n "$branch" ]]; then
-        printf '<b>%s</b> - <i><span foreground="#00ffb4">%s</span></i>\n' "$name" "$branch"
+        printf '<b>%s</b> - <i><span foreground="%s">%s</span></i>\n' "$name" "$OK" "$branch"
     elif git -C "$WS_DIR/$name" rev-parse --git-dir >/dev/null 2>&1; then
-        printf '<b>%s</b> - <i><span foreground="#ff5500">(detached)</span></i>\n' "$name"
+        printf '<b>%s</b> - <i><span foreground="%s">(detached)</span></i>\n' "$name" "$WARN"
     else
         printf '<b>%s</b>\n' "$name"
     fi
