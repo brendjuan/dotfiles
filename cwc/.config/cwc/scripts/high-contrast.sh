@@ -12,12 +12,18 @@
 #    current-theme.conf; mako uses native runtime modes; waybar uses a runtime
 #    style-active.css copy. Only vscode settings.json is edited in place (it must
 #    be, to retheme the editor) and that is done symlink-preserving + atomically.
+#    btop.conf (not stow-tracked) is also edited in place; new launches only.
+#  - obsidian follows the desktop color-scheme (gsettings/portal): ON =
+#    prefer-light, OFF = prefer-dark. Requires the vault's appearance.json to
+#    have "theme": "system". Other portal-aware apps follow the same flip.
 #  - Idempotent + serialized (flock), so overlapping triggers can't corrupt state.
 
 STATE_FILE="$HOME/.cache/high-contrast-mode"
 LOCK_FILE="$HOME/.cache/high-contrast-mode.lock"
 LOG_FILE="$HOME/.cache/high-contrast-mode.log"
 VSCODE_STASH="$HOME/.cache/high-contrast-vscode-theme"
+BTOP_STASH="$HOME/.cache/high-contrast-btop-theme"
+BTOP_CONF="$HOME/.config/btop/btop.conf"
 CWC_DIR="$HOME/.config/cwc"
 KITTY_DIR="$HOME/.config/kitty"
 VSCODE_SETTINGS="$HOME/.config/Code/User/settings.json"
@@ -89,6 +95,31 @@ vscode_set_hc()  { _vscode_apply '."workbench.colorTheme" = "Default High Contra
 vscode_restore() { _vscode_apply '."workbench.colorTheme" = $v' --argjson v "$1"; }
 vscode_del()     { _vscode_apply 'del(."workbench.colorTheme")'; }
 
+# ── btop ──────────────────────────────────────────────────────────────
+# btop paints from its own theme file, not the terminal palette, so the kitty
+# retheme does not reach it. btop has no reload signal (SIGUSR1 only interrupts
+# input polling; SIGUSR2 is unhandled and would terminate it), so this edit
+# applies to NEW btop launches only — a running instance keeps its colors until
+# restarted, and because btop writes its config back on clean exit, an instance
+# open across the toggle can revert this edit in the file when it quits. The
+# stash keeps the disable path correct regardless. btop.conf is not stow-tracked.
+btop_ok()        { [ -f "$BTOP_CONF" ] && grep -q '^color_theme = ' "$BTOP_CONF"; }
+btop_set_theme() {  # $1 = value for color_theme
+    sed -i "s|^color_theme = .*|color_theme = \"$1\"|" "$BTOP_CONF" 2>>"$LOG_FILE" \
+        || log "btop sed edit failed"
+}
+
+# ── system color scheme (obsidian, and other portal-aware apps) ──────
+# Flips the desktop-wide light/dark preference. xdg-desktop-portal broadcasts
+# the change live, so any app set to "adapt to system" follows without a
+# restart. Obsidian (Base vault, appearance.json "theme": "system") is the
+# main consumer; Firefox and GTK apps follow too — that is intentional.
+set_color_scheme() {  # $1 = prefer-light | prefer-dark
+    command -v gsettings >/dev/null 2>&1 || { log "gsettings not found; color-scheme unchanged"; return; }
+    gsettings set org.gnome.desktop.interface color-scheme "$1" >>"$LOG_FILE" 2>&1 \
+        || log "gsettings color-scheme $1 failed"
+}
+
 # ── wallpaper ──────────────────────────────────────────────────────────
 ensure_inverted_wallpaper() {
     command -v convert >/dev/null 2>&1 || { log "convert (ImageMagick) not found; cannot invert wallpaper"; return; }
@@ -122,6 +153,14 @@ enable_high_contrast() {
         log "vscode settings.json not plain JSON (or jq missing); skipping vscode theme"
     fi
 
+    # btop: same stash-once pattern. New launches only (see btop section above).
+    if btop_ok; then
+        [ -f "$BTOP_STASH" ] || sed -n 's/^color_theme = "\(.*\)"$/\1/p' "$BTOP_CONF" >"$BTOP_STASH"
+        btop_set_theme "whiteout"
+    else
+        log "btop.conf missing or has no color_theme line; skipping btop"
+    fi
+
     : >"$STATE_FILE"                       # gate ON (after the stash exists)
 
     cp "$CWC_DIR/waybar/style-highcontrast.css" "$CWC_DIR/waybar/style-active.css"
@@ -130,6 +169,8 @@ enable_high_contrast() {
     apply_kitty_colors "$KITTY_DIR/highcontrast.conf" "$KITTY_OPACITY_HIGHCONTRAST"
 
     makoctl mode -a highcontrast >>"$LOG_FILE" 2>&1 || log "makoctl mode -a failed"
+
+    set_color_scheme prefer-light
 
     ensure_inverted_wallpaper
     set_wallpaper "$WALLPAPER_INVERTED" '#ffffff'
@@ -146,7 +187,13 @@ disable_high_contrast() {
             vscode_del
         fi
     fi
-    rm -f "$VSCODE_STASH" "$STATE_FILE"    # gate OFF
+
+    if btop_ok; then
+        prev=""; [ -f "$BTOP_STASH" ] && prev="$(cat "$BTOP_STASH")"
+        btop_set_theme "${prev:-Default}"
+    fi
+
+    rm -f "$VSCODE_STASH" "$BTOP_STASH" "$STATE_FILE"    # gate OFF
 
     cp "$CWC_DIR/waybar/style.css" "$CWC_DIR/waybar/style-active.css"
     killall -SIGUSR2 waybar 2>/dev/null
@@ -154,6 +201,11 @@ disable_high_contrast() {
     apply_kitty_colors "$KITTY_DIR/dark.conf" "$KITTY_OPACITY_DEFAULT"
 
     makoctl mode -r highcontrast >>"$LOG_FILE" 2>&1 || log "makoctl mode -r failed"
+
+    # glitchcore baseline is dark; hardcoded (not stashed) because the scheme is
+    # now owned by this toggle — restoring a pre-toggle value would leave obsidian
+    # light in both modes.
+    set_color_scheme prefer-dark
 
     set_wallpaper "$WALLPAPER" '#020008'
 
