@@ -11,7 +11,7 @@ ROFI_OPTS=(-theme "$THEME" -normal-window -steal-focus -i)
 ROFI_MARKUP_OPTS=("${ROFI_OPTS[@]}" -markup-rows)
 
 declare -A commands=(
-    ["󰤥 Network (nmtui)"]="kitty --class float-term -e nmtui"
+    ["󰤥 Network (nmtui)"]="kitty --class float-term -e $HOME/.config/cwc/scripts/nmtui-themed.sh"
     ["󰓦 Fetch All Workspaces"]="kitty --class float-term -o remember_window_size=no -o initial_window_width=110c -o initial_window_height=42c -e $HOME/.config/cwc/rofi/fetch-workspaces.sh"
     ["󰘬 Return Workspaces to Main"]="kitty --class float-term -o remember_window_size=no -o initial_window_width=110c -o initial_window_height=42c -e $HOME/.config/cwc/rofi/switch-main-workspaces.sh"
     ["󱒈 Workspace Grid"]="__workspace_grid"
