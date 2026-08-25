@@ -50,10 +50,12 @@
     },
 
     "custom/ccm-battery": {
-        // pack volts + amps off ros2 /ccm/battery. continuous module: the script
-        // stays alive and sets its own cadence (1s live, 30s while the topic is
-        // dead), so there is no "interval" here on purpose. restart-interval only
-        // covers the script exiting — e.g. ros not installed yet.
+        // pack volts + amps for /ccm/battery, read over the vehicle's foxglove
+        // bridge websocket (subscribe-only — the laptop must never join dds or
+        // zenoh, see the script docstring). continuous module: the script stays
+        // alive and sets its own cadence (1s live, 30s while the bridge or topic
+        // is dead), so there is no "interval" here on purpose. restart-interval
+        // only covers the script exiting — e.g. python websockets missing.
         "exec": "~/.config/cwc/scripts/ccm-battery.py",
         "return-type": "json",
         "restart-interval": 30,
