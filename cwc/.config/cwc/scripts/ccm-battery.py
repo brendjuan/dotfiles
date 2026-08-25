@@ -35,7 +35,12 @@ import sys
 import time
 
 URL = "ws://ccm-cm5-0:8765"
-SUBPROTOCOL = "foxglove.websocket.v1"
+# the bridge picks one of these. foxglove-bridge 3.x (built on
+# foxglove-sdk-cpp) answers only to "foxglove.sdk.v1"; the older
+# websocketpp bridge answered only to "foxglove.websocket.v1". a bridge
+# that wants a name we did not offer rejects the handshake with HTTP 400,
+# so we offer both and let it choose. the wire protocol is the same.
+SUBPROTOCOLS = ["foxglove.sdk.v1", "foxglove.websocket.v1"]
 TOPIC = "/ccm/battery"
 
 LIVE_INTERVAL = 1.0    # hardest we redraw once comms are up
@@ -215,6 +220,24 @@ def draw_down(reason, msg=None, age=None):
     emit(f"{ICON} --", "\n".join(lines), "down")
 
 
+def why(e):
+    """short, readable reason for the tooltip.
+
+    the exception class name alone hides the case that matters: a rejected
+    handshake (HTTP 400) means the bridge wanted a subprotocol we did not
+    offer, and that reads exactly like "the host is down".
+    """
+    status = getattr(e, "status_code", None)          # websockets < 12
+    if status is None:                                # websockets >= 12
+        status = getattr(getattr(e, "response", None), "status_code", None)
+    if status is not None:
+        return f"bridge refused the handshake (HTTP {status})"
+    if isinstance(e, asyncio.TimeoutError):
+        return "bridge did not answer in time"
+    text = str(e).strip()
+    return f"{e.__class__.__name__}: {text}" if text else e.__class__.__name__
+
+
 def echo_sample(msg):
     """--echo mode: one decoded sample per line, for the float terminal."""
     print(json.dumps({k: v for k, v in vars(msg).items()}, default=str), flush=True)
@@ -223,15 +246,40 @@ def echo_sample(msg):
 # ── the client ────────────────────────────────────────────────────────
 class State:
     def __init__(self):
-        self.msg = None
-        self.at = 0.0
+        self.msg = None      # last sample that carried a real reading
+        self.at = 0.0        # when that sample arrived
+        self.seen_at = 0.0   # when ANY sample arrived, blank frames included
+        self.blank = False   # was the most recent sample a blank frame?
         self.last_emit = 0.0
         self.was_live = None
+
+    def forget(self):
+        """drop the cached reading — the connection went away under us."""
+        self.msg = None
+        self.blank = False
+        self.was_live = None
+
+    def live(self):
+        return self.msg is not None and (time.monotonic() - self.at) < STALE_AFTER
+
+    def observe(self, msg):
+        """record one decoded sample.
+
+        the broadcaster sometimes publishes a blank frame: every float NaN,
+        present false, status "not charging". that means "no reading right
+        now", not "the pack is at 0V". they arrive in ones and twos between
+        good samples, so keep showing the last real reading and let the normal
+        STALE_AFTER timeout decide when to give up on it.
+        """
+        self.seen_at = time.monotonic()
+        self.blank = not (finite(msg.voltage) or finite(msg.current))
+        if not self.blank:
+            self.msg, self.at = msg, self.seen_at
 
     def redraw(self, reason_when_down):
         now = time.monotonic()
         age = now - self.at
-        live = self.msg is not None and age < STALE_AFTER
+        live = self.live()
         period = LIVE_INTERVAL if live else DOWN_INTERVAL
         if live != self.was_live or (now - self.last_emit) >= period:
             if live:
@@ -242,13 +290,21 @@ class State:
         return live
 
 
+def down_reason(state, channel_id):
+    if channel_id is None:
+        return "connected, topic not advertised"
+    if state.blank and (time.monotonic() - state.seen_at) < STALE_AFTER:
+        return "publisher reports no battery data"
+    return "subscribed, publisher silent"
+
+
 async def session(ws, state):
     """one connected websocket: find the channel, subscribe, pump samples."""
     import websockets
     channel_id = None
     sub_id = 1
     while True:
-        live = state.msg is not None and (time.monotonic() - state.at) < STALE_AFTER
+        live = state.live()
         timeout = LIVE_INTERVAL if live else min(DOWN_INTERVAL, 5.0)
         try:
             raw = await asyncio.wait_for(ws.recv(), timeout)
@@ -265,7 +321,7 @@ async def session(ws, state):
                 except Exception as e:
                     draw_down(f"cdr decode failed: {e}")
                     continue
-                state.msg, state.at = msg, time.monotonic()
+                state.observe(msg)
                 if ECHO:
                     echo_sample(msg)
         elif raw is not None:
@@ -285,8 +341,7 @@ async def session(ws, state):
                     channel_id = None
 
         if not ECHO:
-            state.redraw("connected, topic not advertised" if channel_id is None
-                         else "subscribed, publisher silent")
+            state.redraw(down_reason(state, channel_id))
 
 
 async def main_loop():
@@ -299,17 +354,17 @@ async def main_loop():
     while True:
         try:
             async with websockets.connect(
-                URL, subprotocols=[SUBPROTOCOL], max_size=None, open_timeout=10,
+                URL, subprotocols=SUBPROTOCOLS, max_size=None, open_timeout=10,
             ) as ws:
                 await session(ws, state)
-        except (OSError, asyncio.TimeoutError, Exception) as e:
+        except Exception as e:
+            reason = why(e)
             if ECHO:
-                print(f"[bridge unreachable: {e.__class__.__name__}] retry in {DOWN_INTERVAL:.0f}s",
+                print(f"[{reason}] retry in {DOWN_INTERVAL:.0f}s",
                       file=sys.stderr, flush=True)
             else:
-                state.msg = None
-                state.was_live = None
-                state.redraw(f"bridge unreachable ({e.__class__.__name__})")
+                state.forget()
+                state.redraw(reason)
         await asyncio.sleep(DOWN_INTERVAL if state.msg is None else 1.0)
 
 
