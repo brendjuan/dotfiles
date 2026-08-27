@@ -19,6 +19,8 @@ declare -A commands=(
     ["󰂺 Learn Conventions"]="__learn_conventions"
     ["󰈈 Browse Reviews"]="~/.config/cwc/rofi/review-browser.sh"
     ["󰨞 VSCode Workspace"]="~/.config/cwc/rofi/vscode-workspace.sh"
+    ["󰛳 Zenoh Operator Toggle"]="$HOME/.config/cwc/scripts/zenoh-operator.sh"
+    ["󰈙 Zenoh Operator Logs"]="$HOME/.config/cwc/scripts/zenoh-operator.sh logwin"
     ["󰌁 High Contrast Toggle"]="~/.config/cwc/scripts/high-contrast.sh"
 )
 

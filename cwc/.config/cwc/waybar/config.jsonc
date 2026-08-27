@@ -7,11 +7,30 @@
     "height": 16,
     "modules-left": ["dwl/tags"],
     "modules-center": ["wlr/taskbar"],
-    "modules-right": ["tray", "custom/highcontrast", "custom/recording", "custom/rivercast", "custom/github", "custom/ccm-battery", "custom/claude-usage", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
+    "modules-right": ["tray", "custom/zenoh", "custom/highcontrast", "custom/recording", "custom/rivercast", "custom/github", "custom/ccm-battery", "custom/claude-usage", "dwl/window", "backlight", "cpu", "memory", "pulseaudio", "battery", "clock"],
 
     "tray": {
         "icon-size": 14,
         "spacing": 6
+    },
+
+    "custom/zenoh": {
+        // start/stop the zenoh operator bridge in ~/Workspace/deployment. the
+        // button only runs the deployment repo's own zenoh:operator task.
+        // "status" is read-only — it looks for the local bridge process and
+        // nothing else, so polling it never puts anything on the wire (the
+        // laptop stays off dds and zenoh until you press the button).
+        // left click toggles, right click opens the log.
+        "exec": "~/.config/cwc/scripts/zenoh-operator.sh status",
+        "return-type": "json",
+        "interval": 3,
+        // the script raises this signal after a toggle so the icon flips at
+        // once instead of waiting for the next poll. keep both in sync.
+        "signal": 8,
+        "on-click": "~/.config/cwc/scripts/zenoh-operator.sh",
+        // "logwin" owns the terminal flags and closes an already open log
+        // window first, so pressing this again replaces it instead of stacking.
+        "on-click-right": "~/.config/cwc/scripts/zenoh-operator.sh logwin"
     },
 
     "custom/highcontrast": {

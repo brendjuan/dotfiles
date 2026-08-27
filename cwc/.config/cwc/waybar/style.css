@@ -49,6 +49,24 @@ window#waybar {
     background-color: rgba(0, 255, 200, 0.06);
 }
 
+#custom-zenoh {
+    /* zenoh operator bridge toggle — plain glyph button, same as the
+       high-contrast switch. state lives in the color, not a chip. */
+    padding: 0 8px;
+    font-size: 12px;
+}
+
+#custom-zenoh.off {
+    /* bridge down — ghosted so it reads as "nothing on the wire" */
+    color: rgba(0, 255, 180, 0.28);
+}
+
+#custom-zenoh.on {
+    /* bridge up — full teal, we are talking to the vehicle */
+    color: #00ffb4;
+    font-weight: bold;
+}
+
 #custom-highcontrast {
     padding: 0 8px;
     color: #00ffb4;

@@ -49,6 +49,22 @@ window#waybar {
     font-weight: bold;
 }
 
+#custom-zenoh {
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+#custom-zenoh.off {
+    /* mid grey stays readable on white without looking active */
+    color: #777777;
+}
+
+#custom-zenoh.on {
+    /* dark green on white — same green family as the other "good" states */
+    color: #006622;
+}
+
 #custom-highcontrast {
     padding: 0 8px;
     color: #000000;
