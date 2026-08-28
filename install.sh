@@ -158,5 +158,12 @@ if [[ "${awesome_answer,,}" == "y" ]]; then
     git -C "$AWESOME_DIR" update-index --assume-unchanged themes/powerarrow-dark/theme.lua 2>/dev/null || true
 fi
 
+if command -v systemctl &>/dev/null && systemctl --user show-environment &>/dev/null; then
+    echo ""
+    echo "Enabling kitty session autosave timer..."
+    systemctl --user daemon-reload
+    systemctl --user enable --now kitty-save-session.timer
+fi
+
 echo ""
 echo "Done! All packages stowed."
