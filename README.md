@@ -21,7 +21,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `zsh`      | `.zshrc`, `.zshenv` (Oh My Zsh) |
 | `bash`     | `.bashrc`                       |
 | `git`      | `.gitconfig`, `.config/git/ignore` (git-lfs, conditional personal identity) |
-| `kitty`    | Kitty terminal                  |
+| `kitty`    | Kitty terminal + session autosave for crash recovery |
 | `mako`     | Mako notification daemon        |
 | `swaylock` | Swaylock screen locker          |
 | `cwc`      | CWC window compositor           |
@@ -70,6 +70,23 @@ The shell configs (`zsh`, `bash`) conditionally activate tools only if they are 
 - **[depot](https://depot.dev)** — `~/.depot/bin/`
 - **[mise](https://mise.jdx.dev)** — `~/.local/bin/mise`
 - **[pnpm](https://pnpm.io)** — `~/.local/share/pnpm/`
+
+## Kitty session resume (crash recovery)
+
+The `kitty` package includes a systemd user timer (`kitty-save-session.timer`,
+enabled by `install.sh`) that snapshots all open kitty windows every minute to
+`~/.local/state/kitty/last-session.conf`. After a crash, power loss, or
+reboot, run:
+
+```bash
+~/.config/kitty/resume-session.sh
+```
+
+This reopens every OS window, tab, and split at its old working directory.
+A window that was running `claude` is relaunched with `claude --continue`,
+so the Claude Code conversation resumes where it stopped. Other programs are
+not restarted; their windows come back as plain shells. At most the last
+minute of layout changes can be lost.
 
 ## AppImage apps
 

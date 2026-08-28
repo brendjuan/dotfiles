@@ -1,0 +1,6 @@
+[Unit]
+Description=Snapshot open kitty sessions for crash recovery
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/kitty/save-session.py
