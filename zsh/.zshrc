@@ -138,7 +138,10 @@ if [ -d "$HOME/.local/share/pnpm" ]; then
   esac
 fi
 
-export CYCLONEDDS_URI="{{CYCLONEDDS_URI}}"
+# DDS env (CYCLONEDDS_URI, RMW_IMPLEMENTATION) is resolved from the ROS
+# workspace's nix dev shell; install.sh generates the resolver script.
+# direnv still wins inside the workspace — it loads after this.
+[ -f "$HOME/.config/dotfiles/env.sh" ] && source "$HOME/.config/dotfiles/env.sh"
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 [ -f /opt/ros/jazzy/setup.zsh ] && source /opt/ros/jazzy/setup.zsh
@@ -229,3 +232,20 @@ lsb() {
   done
 }
 alias ls='lsb'
+
+# direnv loads the repo .envrc. Keep this last so direnv is on PATH.
+if command -v direnv >/dev/null 2>&1; then
+  eval "$(direnv hook zsh)"
+
+  # The nix dev shell replaces PYTHONPATH and hides the ROS 2 modules.
+  ROS_PYTHONPATH="$PYTHONPATH"
+  _keep_ros_pythonpath() {
+    [[ -n $ROS_PYTHONPATH ]] || return 0
+    case ":$PYTHONPATH:" in
+      *":${ROS_PYTHONPATH%%:*}:"*) ;;
+      *) export PYTHONPATH="$ROS_PYTHONPATH${PYTHONPATH:+:$PYTHONPATH}" ;;
+    esac
+  }
+  autoload -Uz add-zsh-hook
+  add-zsh-hook precmd _keep_ros_pythonpath
+fi

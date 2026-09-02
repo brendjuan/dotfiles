@@ -144,7 +144,9 @@ if [ -d "$HOME/.local/share/pnpm" ]; then
   esac
 fi
 
-export CYCLONEDDS_URI="{{CYCLONEDDS_URI}}"
+# DDS env (CYCLONEDDS_URI, RMW_IMPLEMENTATION) is resolved from the ROS
+# workspace's nix dev shell; install.sh generates the resolver script.
+[ -f "$HOME/.config/dotfiles/env.sh" ] && source "$HOME/.config/dotfiles/env.sh"
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 [ -f /opt/ros/jazzy/setup.bash ] && source /opt/ros/jazzy/setup.bash

@@ -61,7 +61,7 @@ Available variables:
 | `WORK_GIT_EMAIL` | `.gitconfig` | Default git author email |
 | `PERSONAL_GIT_NAME` | `.gitconfig-personal` | Git identity for `~/Personal/` repos |
 | `PERSONAL_GIT_EMAIL` | `.gitconfig-personal` | Git email for `~/Personal/` repos |
-| `CYCLONEDDS_URI` | `.zshrc`, `.bashrc` | CycloneDDS config file URI |
+| `ROS_WORKSPACE` | `~/.config/dotfiles/env.sh` | ROS workspace whose nix dev shell owns the CycloneDDS config (`CYCLONEDDS_URI`) |
 
 ## Conditional tool setup
 
