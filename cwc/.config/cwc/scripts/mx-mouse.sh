@@ -11,6 +11,10 @@
 # it freely. Only "pick" and "details" talk to the mouse, through
 # ~/.local/bin/mx (stow package "mx"). Run `mx setup` once so that works
 # without sudo.
+#
+# A Logitech keyboard reports a battery through the same driver, so "status"
+# only looks at batteries whose device moves the pointer. `mx` picks the mouse
+# the same way; set MX_DEVICE if it picks the wrong one.
 set -u
 
 # mx lives in ~/.local/bin, which is not always on PATH for a process
@@ -32,12 +36,31 @@ POWER_SUPPLY_DIR="${MX_POWER_SUPPLY_DIR:-/sys/class/power_supply}"
 notify() { notify-send "Mouse" "$1"; }
 refresh_waybar() { pkill -"RTMIN+$WAYBAR_SIGNAL" waybar 2>/dev/null || true; }
 
+# True if the device behind the power supply in $1 moves the pointer. A
+# Logitech keyboard also reports a hidpp battery, and this module is about the
+# mouse, so the keyboard has to be skipped. If the device has no input node we
+# cannot tell, and then we keep it.
+is_pointer() {
+    local caps low has_input=1
+    for caps in "$1"/device/input/input*/capabilities/rel; do
+        [[ -r "$caps" ]] || continue
+        has_input=0
+        low=$(<"$caps")
+        low=${low##* }                                  # hex words, low word last
+        [[ "$low" =~ ^[0-9a-fA-F]+$ ]] || continue
+        (( (0x$low & 0x3) == 0x3 )) && return 0          # bit 0 REL_X, bit 1 REL_Y
+    done
+    (( has_input == 0 )) && return 1
+    return 0
+}
+
 # ── status ────────────────────────────────────────────────────────────
 if [[ "${1:-}" == "status" ]]; then
     hint='Left click to set dpi, right click for details'
     for supply in "$POWER_SUPPLY_DIR"/hidpp_battery_*; do
         [[ -r "$supply/online" ]] || continue
         [[ "$(<"$supply/online")" == "1" ]] || continue
+        is_pointer "$supply" || continue
 
         model=$(<"$supply/model_name")
         capacity=$(cat "$supply/capacity" 2>/dev/null || true)

@@ -12,6 +12,13 @@ No extra packages are needed.
     mx devices         list the Logitech HID devices found
     mx setup           install a udev rule so sudo is not needed (asks for sudo once)
 
+Picking the device: a Logitech keyboard is also a Logitech HID device, so the
+commands score every device found and use the best one: the kernel binds the
+HID++ driver to it, its report descriptor declares the HID++ long report, it
+has a HID++ battery, and it moves the pointer. To choose by hand, pass
+--device with a /dev/hidraw node or a part of the device name, or set
+MX_DEVICE to the same thing. `mx devices` marks the device that would be used.
+
 Protocol: every message is a 20 byte "long" HID report:
     [0x11, device index, feature index, function << 4 | software id, params...]
 The device answers with the same first four bytes followed by the result.
@@ -33,6 +40,15 @@ REPORT_LEN = 20
 DEVICE_INDEX = 0xFF        # "this device", used when not going through a receiver
 SW_ID = 0x0A               # marks our requests; replies carry it back (1..15)
 REPLY_TIMEOUT_S = 3.0
+ENV_DEVICE = "MX_DEVICE"   # set it to a /dev/hidraw node or part of a device name
+
+# REL_X | REL_Y in the kernel's input capability bitmap: what a pointer reports.
+POINTER_REL_BITS = 0x3
+# HID++ lives on a vendor usage page and uses report id 0x11 for long reports.
+# Seeing both in the report descriptor means the device speaks HID++, even when
+# the hidpp kernel driver is not bound to it.
+HIDPP_USAGE_PAGES = (b"\x06\x43\xff", b"\x06\x00\xff")
+HIDPP_LONG_REPORT_ID = b"\x85\x11"
 
 FEATURE_ROOT = 0x0000
 FEATURE_BATTERY_UNIFIED = 0x1004
@@ -64,34 +80,137 @@ class MxError(Exception):
 # device discovery
 # --------------------------------------------------------------------------- #
 
+def read_uevent(path):
+    """Parse a sysfs uevent file into a dict."""
+    info = {}
+    with open(path) as f:
+        for line in f:
+            key, _, value = line.strip().partition("=")
+            info[key] = value
+    return info
+
+
+def is_pointer(device_dir):
+    """True if an input device below device_dir moves the pointer."""
+    for path in glob.glob(os.path.join(device_dir, "input/input*/capabilities/rel")):
+        try:
+            with open(path) as f:
+                # the bitmap is printed as space separated hex words, low word last
+                bits = int(f.read().strip().split()[-1], 16)
+        except (OSError, ValueError, IndexError):
+            continue
+        if bits & POINTER_REL_BITS == POINTER_REL_BITS:
+            return True
+    return False
+
+
+def speaks_hidpp(device_dir):
+    """True if the HID report descriptor declares the HID++ long report."""
+    try:
+        with open(os.path.join(device_dir, "report_descriptor"), "rb") as f:
+            descriptor = f.read()
+    except OSError:
+        return False
+    return (HIDPP_LONG_REPORT_ID in descriptor
+            and any(page in descriptor for page in HIDPP_USAGE_PAGES))
+
+
+def device_score(hidpp, battery, pointer):
+    """How much this device looks like the mouse we want to talk to."""
+    return 4 * bool(hidpp) + 2 * bool(battery) + 2 * bool(pointer)
+
+
 def find_devices():
-    """Return [(devnode, name)] for every Logitech HID device with a hidraw node."""
+    """Return one dict per Logitech HID device that has a hidraw node.
+
+    Keys: node, name, driver, key (equal for every node of one physical
+    device), hidpp, battery, pointer, score.
+    """
     found = []
-    for uevent in sorted(glob.glob("/sys/class/hidraw/hidraw*/device/uevent")):
-        info = {}
-        with open(uevent) as f:
-            for line in f:
-                key, _, value = line.strip().partition("=")
-                info[key] = value
+    for uevent in glob.glob("/sys/class/hidraw/hidraw*/device/uevent"):
+        node = uevent.split("/")[4]                 # hidraw3
+        info = read_uevent(uevent)
         # HID_ID looks like 0005:0000046D:0000B034 (bus:vendor:product)
         parts = info.get("HID_ID", "").split(":")
         if len(parts) != 3 or int(parts[1], 16) != VENDOR_LOGITECH:
             continue
-        devnode = "/dev/" + uevent.split("/")[4]
-        found.append((devnode, info.get("HID_NAME", "?")))
+        device_dir = os.path.dirname(uevent)
+        driver = info.get("DRIVER", "?")
+        phys = info.get("HID_PHYS", "")
+        uniq = info.get("HID_UNIQ", "")
+        hidpp = driver.startswith("logitech-hidpp") or speaks_hidpp(device_dir)
+        battery = bool(glob.glob(os.path.join(device_dir, "power_supply/hidpp_battery_*")))
+        pointer = is_pointer(device_dir)
+        found.append({
+            "node": "/dev/" + node,
+            "name": info.get("HID_NAME", "?"),
+            "driver": driver,
+            # One USB device shows up as several hidraw nodes, one per
+            # interface. They share the serial, and the physical path without
+            # the trailing "/inputN", so either one groups them together.
+            "key": uniq or phys.rsplit("/input", 1)[0] or node,
+            "hidpp": hidpp,
+            "battery": battery,
+            "pointer": pointer,
+            "score": device_score(hidpp, battery, pointer),
+        })
+    # hidraw2 must sort before hidraw10, so sort on the number
+    found.sort(key=lambda dev: int(dev["node"][len("/dev/hidraw"):] or 0))
     return found
 
 
-def pick_device(requested):
-    if requested:
+def one_per_device(devices):
+    """Keep the best hidraw node of each physical device."""
+    best = {}
+    for dev in devices:
+        if dev["key"] not in best or dev["score"] > best[dev["key"]]["score"]:
+            best[dev["key"]] = dev
+    return sorted(best.values(), key=lambda dev: dev["node"])
+
+
+def describe(dev):
+    return f"{dev['node']} ({dev['name']})"
+
+
+def match_by_name(devices, wanted):
+    """Resolve a --device / MX_DEVICE name fragment to one hidraw node."""
+    matches = one_per_device(
+        [dev for dev in devices if wanted.lower() in dev["name"].lower()])
+    if not matches:
+        raise MxError(f"no Logitech device whose name contains '{wanted}'. "
+                      f"Run `mx devices` to see what is connected.")
+    if len(matches) > 1:
+        names = ", ".join(describe(dev) for dev in matches)
+        raise MxError(f"'{wanted}' matches several devices: {names}")
+    return matches[0]["node"]
+
+
+def pick_device(requested=None):
+    """Return the hidraw node to talk to."""
+    requested = requested or os.environ.get(ENV_DEVICE, "")
+    if requested.startswith("/"):
         return requested
+    # a bare node name, as printed by `mx devices` without the directory
+    if requested.startswith("hidraw") and requested[len("hidraw"):].isdigit():
+        return "/dev/" + requested
+
     devices = find_devices()
+    if requested:
+        return match_by_name(devices, requested)
     if not devices:
         raise MxError("no Logitech HID device found (is the mouse connected?)")
-    if len(devices) > 1:
-        names = ", ".join(f"{node} ({name})" for node, name in devices)
-        raise MxError(f"several Logitech devices found, pick one with --device: {names}")
-    return devices[0][0]
+
+    candidates = one_per_device(devices)
+    best = max(dev["score"] for dev in candidates)
+    if best:
+        candidates = [dev for dev in candidates if dev["score"] == best]
+    if len(candidates) == 1:
+        return candidates[0]["node"]
+
+    names = ", ".join(describe(dev) for dev in candidates)
+    raise MxError(
+        f"several Logitech devices look the same, pick one with --device "
+        f"(a /dev/hidraw node or a part of the name) or set {ENV_DEVICE}: {names}")
 
 
 def open_device(path):
@@ -263,8 +382,22 @@ def cmd_devices(args):
     devices = find_devices()
     if not devices:
         print("no Logitech HID device found")
-    for node, name in devices:
-        print(f"{node}  {name}")
+        return
+    try:
+        chosen = pick_device(args.device)
+    except MxError:
+        chosen = None
+    for dev in devices:
+        tags = [tag for tag, on in (("hid++", dev["hidpp"]),
+                                    ("battery", dev["battery"]),
+                                    ("pointer", dev["pointer"])) if on]
+        marker = "*" if dev["node"] == chosen else " "
+        detail = f"  [{', '.join(tags)}]" if tags else ""
+        print(f"{marker} {dev['node']:<14} {dev['name']}{detail}")
+    if chosen:
+        print("\n* the device the other commands use.")
+    else:
+        print("\nNo device chosen. Pass --device or set " + ENV_DEVICE + ".")
 
 
 def cmd_battery(args):
@@ -291,7 +424,7 @@ def cmd_dpi(args):
 
 def cmd_info(args):
     path = pick_device(args.device)
-    name = dict(find_devices()).get(path, "?")
+    name = next((dev["name"] for dev in find_devices() if dev["node"] == path), "?")
     fd = open_device(path)
     print(f"{name}  ({path}, HID++ {protocol_version(fd)})")
     print(f"battery: {format_battery(*read_battery(fd))}")
@@ -320,8 +453,10 @@ def main(argv=None):
         description="Battery and DPI of a Logitech mouse over HID++.",
         epilog="Run `mx setup` once so the commands work without sudo.",
     )
-    parser.add_argument("--device", metavar="/dev/hidrawN",
-                        help="hidraw node to use (default: the only Logitech device found)")
+    parser.add_argument("--device", metavar="NODE|NAME",
+                        help="hidraw node (/dev/hidrawN) or part of the device name; "
+                             f"same as the {ENV_DEVICE} variable. Default: the "
+                             "connected Logitech device that looks most like a mouse")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("battery", help="show the charge level").set_defaults(func=cmd_battery)
     p = sub.add_parser("dpi", help="show or set the DPI")

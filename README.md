@@ -85,11 +85,25 @@ mx battery     # 80%  discharging
 mx dpi         # 1000 dpi  (default 1000; allowed: 200-8000 in steps of 50)
 mx dpi 1600    # set the DPI
 mx info        # device, HID++ version, battery and DPI
+mx devices     # list the Logitech devices, with the chosen one marked "*"
+```
+
+A Logitech keyboard is also a Logitech HID device, so `mx` scores every device
+it finds and uses the best one: the kernel binds the HID++ driver to it, its
+report descriptor declares the HID++ long report, it reports a HID++ battery,
+and it moves the pointer. To choose the device by hand:
+
+```bash
+mx --device "MX Master" battery    # part of the device name
+mx --device /dev/hidraw8 battery   # a node, as printed by `mx devices`
+export MX_DEVICE="MX Master"       # same for every call
 ```
 
 The waybar module `custom/mouse` (cwc package) shows the mouse battery, greyed
 out when the mouse is not connected. Left click picks a DPI in rofi, right
-click opens a terminal with `mx info`. It needs the `mx` package.
+click opens a terminal with `mx info`. It needs the `mx` package. It reads the
+battery from sysfs and skips batteries whose device does not move the pointer,
+so a Logitech keyboard battery never shows up there.
 
 ## AppImage apps
 
