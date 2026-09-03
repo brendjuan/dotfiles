@@ -1,5 +1,7 @@
 # Audience: non-native English speakers
 
+I am a non-native English speaker myself. Speak to me in the chat with the same plain style described below.
+
 Everything written for other people — code comments, commit messages, PR titles and descriptions, review comments, issue text, docs — is read by non-native English speakers. Write for that audience:
 
 - Use plain, direct English. Prefer common words and literal phrasing over clever or informal phrasing.
