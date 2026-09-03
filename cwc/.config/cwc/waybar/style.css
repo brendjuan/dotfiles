@@ -67,6 +67,35 @@ window#waybar {
     font-weight: bold;
 }
 
+#custom-mouse {
+    /* logitech mouse battery — plain glyph like the zenoh switch, state lives
+       in the color. dpi and details are one click away */
+    padding: 0 8px;
+    margin-left: 6px;  /* breathing room after the last tray icon */
+    font-size: 12px;
+    color: #00ffb4;
+}
+
+#custom-mouse.off {
+    /* mouse not connected — ghosted */
+    color: rgba(0, 255, 180, 0.28);
+}
+
+#custom-mouse.charging {
+    color: #00ffb4;
+    font-weight: bold;
+}
+
+#custom-mouse.warning {
+    /* 20% or less — charge it soon */
+    color: #ff5500;
+}
+
+#custom-mouse.critical {
+    /* 10% or less — the mouse is about to go quiet */
+    color: #ff0050;
+}
+
 #custom-highcontrast {
     padding: 0 8px;
     color: #00ffb4;

@@ -26,6 +26,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `swaylock` | Swaylock screen locker          |
 | `cwc`      | CWC window compositor           |
 | `k4`       | `k4` script — launch kitty in a 2x2 grid |
+| `mx`       | `mx` script — battery and DPI of a Logitech mouse over HID++ |
 | `claude`   | Claude Code skills (`.claude/skills/`) — only skills, no creds/state |
 | `apps`     | Desktop entries (`.local/share/applications/`) so AppImages show up in rofi |
 | `awesome`  | **Legacy.** Awesome WM (overlay on [awesome-copycats](https://github.com/lcpz/awesome-copycats)) |
@@ -70,6 +71,25 @@ The shell configs (`zsh`, `bash`) conditionally activate tools only if they are 
 - **[depot](https://depot.dev)** — `~/.depot/bin/`
 - **[mise](https://mise.jdx.dev)** — `~/.local/bin/mise`
 - **[pnpm](https://pnpm.io)** — `~/.local/share/pnpm/`
+
+## Logitech mouse
+
+The `mx` package installs a small Python script (`~/.local/bin/mx`) that talks
+HID++ to a Logitech mouse over its `/dev/hidraw` node. It needs no extra
+packages. It works for a mouse connected over Bluetooth or a USB cable, not
+through a Unifying/Bolt receiver.
+
+```bash
+mx setup       # once: installs a udev rule so sudo is not needed (asks for sudo)
+mx battery     # 80%  discharging
+mx dpi         # 1000 dpi  (default 1000; allowed: 200-8000 in steps of 50)
+mx dpi 1600    # set the DPI
+mx info        # device, HID++ version, battery and DPI
+```
+
+The waybar module `custom/mouse` (cwc package) shows the mouse battery, greyed
+out when the mouse is not connected. Left click picks a DPI in rofi, right
+click opens a terminal with `mx info`. It needs the `mx` package.
 
 ## AppImage apps
 
