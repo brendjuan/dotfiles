@@ -1,3 +1,10 @@
+--[[
+
+     Powerarrow Dark Awesome WM theme
+     github.com/lcpz
+
+--]]
+
 local gears = require("gears")
 local lain  = require("lain")
 local awful = require("awful")
@@ -5,7 +12,7 @@ local wibox = require("wibox")
 local dpi   = require("beautiful.xresources").apply_dpi
 
 local os = os
-local my_table = awful.util.table or gears.table
+local my_table = awful.util.table or gears.table -- 4.{0,1} compatibility
 
 local theme                                     = {}
 theme.dir                                       = os.getenv("HOME") .. "/.config/awesome/themes/powerarrow-dark"
@@ -86,6 +93,7 @@ local separators = lain.util.separators
 
 local keyboardlayout = awful.widget.keyboardlayout:new()
 
+-- Textclock
 local clockicon = wibox.widget.imagebox(theme.widget_clock)
 local clock = awful.widget.watch(
     "date +'%a %d %b %R'", 60,
@@ -94,6 +102,7 @@ local clock = awful.widget.watch(
     end
 )
 
+-- Calendar
 theme.cal = lain.widget.cal({
     attach_to = { clock },
     notification_preset = {
@@ -103,8 +112,28 @@ theme.cal = lain.widget.cal({
     }
 })
 
+-- Mail IMAP check
 local mailicon = wibox.widget.imagebox(theme.widget_mail)
+--[[ commented because it needs to be set before use
+mailicon:buttons(my_table.join(awful.button({ }, 1, function () awful.spawn(mail) end)))
+theme.mail = lain.widget.imap({
+    timeout  = 180,
+    server   = "server",
+    mail     = "mail",
+    password = "keyring get mail",
+    settings = function()
+        if mailcount > 0 then
+            widget:set_markup(markup.font(theme.font, " " .. mailcount .. " "))
+            mailicon:set_image(theme.widget_mail_on)
+        else
+            widget:set_text("")
+            mailicon:set_image(theme.widget_mail)
+        end
+    end
+})
+--]]
 
+-- MPD
 local musicplr = awful.util.terminal .. " -title Music -e ncmpcpp"
 local mpdicon = wibox.widget.imagebox(theme.widget_music)
 mpdicon:buttons(my_table.join(
@@ -140,6 +169,7 @@ theme.mpd = lain.widget.mpd({
     end
 })
 
+-- MEM
 local memicon = wibox.widget.imagebox(theme.widget_mem)
 local mem = lain.widget.mem({
     settings = function()
@@ -147,6 +177,7 @@ local mem = lain.widget.mem({
     end
 })
 
+-- CPU
 local cpuicon = wibox.widget.imagebox(theme.widget_cpu)
 local cpu = lain.widget.cpu({
     settings = function()
@@ -154,6 +185,7 @@ local cpu = lain.widget.cpu({
     end
 })
 
+-- Coretemp
 local tempicon = wibox.widget.imagebox(theme.widget_temp)
 local temp = lain.widget.temp({
     settings = function()
@@ -161,8 +193,18 @@ local temp = lain.widget.temp({
     end
 })
 
+-- / fs
 local fsicon = wibox.widget.imagebox(theme.widget_hdd)
+--[[ commented because it needs Gio/Glib >= 2.54
+theme.fs = lain.widget.fs({
+    notification_preset = { fg = theme.fg_normal, bg = theme.bg_normal, font = "Terminus 10" },
+    settings = function()
+        widget:set_markup(markup.font(theme.font, " " .. fs_now["/"].percentage .. "% "))
+    end
+})
+--]]
 
+-- Battery
 local baticon = wibox.widget.imagebox(theme.widget_battery)
 local bat = lain.widget.bat({
     settings = function()
@@ -184,6 +226,7 @@ local bat = lain.widget.bat({
     end
 })
 
+-- ALSA volume
 local volicon = wibox.widget.imagebox(theme.widget_vol)
 theme.volume = lain.widget.alsa({
     settings = function()
@@ -211,6 +254,7 @@ theme.volume.widget:buttons(awful.util.table.join(
                                end)
 ))
 
+-- Net
 local neticon = wibox.widget.imagebox(theme.widget_net)
 local net = lain.widget.net({
     settings = function()
@@ -221,27 +265,36 @@ local net = lain.widget.net({
     end
 })
 
+-- Separators
 local spr     = wibox.widget.textbox(' ')
 local arrl_dl = separators.arrow_left(theme.bg_focus, "alpha")
 local arrl_ld = separators.arrow_left("alpha", theme.bg_focus)
 
 function theme.at_screen_connect(s)
+    -- Quake application
     s.quake = lain.util.quake({ app = awful.util.terminal })
 
+    -- If wallpaper is a function, call it with the screen
     local wallpaper = theme.wallpaper
     if type(wallpaper) == "function" then
         wallpaper = wallpaper(s)
     end
 
+    -- Crop-to-fill: scale the wallpaper to cover the screen entirely,
+    -- cropping the excess instead of leaving bars on portrait monitors.
     local geom = s.geometry
     local surf = gears.surface(wallpaper)
     local img_w, img_h = gears.surface.get_size(surf)
     local scale = math.max(geom.width / img_w, geom.height / img_h)
     gears.wallpaper.centered(wallpaper, s, nil, scale)
 
+    -- Tags
     awful.tag(awful.util.tagnames, s, awful.layout.layouts[1])
 
+    -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt()
+    -- Create an imagebox widget which will contains an icon indicating which layout we're using.
+    -- We need one layoutbox per screen.
     s.mylayoutbox = awful.widget.layoutbox(s)
     s.mylayoutbox:buttons(my_table.join(
                            awful.button({}, 1, function () awful.layout.inc( 1) end),
@@ -249,22 +302,27 @@ function theme.at_screen_connect(s)
                            awful.button({}, 3, function () awful.layout.inc(-1) end),
                            awful.button({}, 4, function () awful.layout.inc( 1) end),
                            awful.button({}, 5, function () awful.layout.inc(-1) end)))
+    -- Create a taglist widget
     s.mytaglist = awful.widget.taglist(s, awful.widget.taglist.filter.all, awful.util.taglist_buttons)
 
+    -- Create a tasklist widget
     s.mytasklist = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, awful.util.tasklist_buttons)
 
+    -- Create the wibox
     s.mywibox = awful.wibar({ position = "top", screen = s, height = dpi(18), bg = theme.bg_normal, fg = theme.fg_normal })
 
+    -- Add widgets to the wibox
     s.mywibox:setup {
         layout = wibox.layout.align.horizontal,
-        {
+        { -- Left widgets
             layout = wibox.layout.fixed.horizontal,
+            --spr,
             s.mytaglist,
             s.mypromptbox,
             spr,
         },
-        s.mytasklist,
-        {
+        s.mytasklist, -- Middle widget
+        { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
             wibox.widget.systray(),
             keyboardlayout,
@@ -285,6 +343,7 @@ function theme.at_screen_connect(s)
             temp.widget,
             arrl_ld,
             wibox.container.background(fsicon, theme.bg_focus),
+            --wibox.container.background(theme.fs.widget, theme.bg_focus),
             arrl_dl,
             baticon,
             bat.widget,
