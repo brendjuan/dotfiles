@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# custom command menu — rofi but make it useful
-# add entries as "label|command" lines
 
 if [ -f "$HOME/.cache/high-contrast-mode" ]; then
     THEME="$HOME/.config/cwc/rofi/highcontrast.rasi"
@@ -30,7 +28,6 @@ chosen=$(printf '%s\n' "${!commands[@]}" | rofi -dmenu -p "cmd" "${ROFI_OPTS[@]}
 
 cmd="${commands[$chosen]}"
 
-# commands that need a workspace picked first, then exec a script with the name
 if [[ "$cmd" == "__workspace_grid" || "$cmd" == "__review_grid" || "$cmd" == "__learn_conventions" ]]; then
     case "$cmd" in
         __review_grid)       target="review-grid.sh" ;;

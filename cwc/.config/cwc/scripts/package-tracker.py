@@ -1,27 +1,3 @@
-#!/usr/bin/env python3
-"""
-package-tracker.py — where-is-my-stuff telemetry for waybar.
-polls the official fedex track api (free tier) for every package listed in
-~/.config/cwc/packages.json and renders one chip for all of them.
-
-config (~/.config/cwc/packages.json — NOT stowed, it holds creds):
-{
-  "fedex": {"client_id": "l7xx...", "client_secret": "...", "environment": "production"},
-  "packages": [
-    {"carrier": "fedex", "tracking": "731234567890", "label": "B&H order",
-     "url": "optional click-through override"}
-  ]
-}
-
-creds: https://developer.fedex.com → create project → enable "Track API" →
-copy the PRODUCTION key/secret. ~5 minutes, costs nothing. (the retail
-tracking page and the old trackingCal endpoint are both bot-walled — the
-real api is the only door they actually leave open.)
-
-carriers are a dispatch table — bolt on ups/usps by adding one function.
-emits the waybar custom-module json contract: {text, tooltip, class, alt}.
-run with --open to xdg-open the tracking page (wired to on-click).
-"""
 import hashlib
 import json
 import os
@@ -36,19 +12,18 @@ from datetime import datetime
 CONFIG = os.path.expanduser("~/.config/cwc/packages.json")
 CACHE = os.path.expanduser("~/.cache/package-tracker.json")
 TOKEN_CACHE = os.path.expanduser("~/.cache/fedex-oauth.json")
-TTL = 570  # just under the waybar interval so each tick can refetch
+TTL = 570
 
-ICON = "󰏓"  # nf-md-package-variant-closed — the box, the myth, the legend
+ICON = "󰏓"
 
-# fedex derivedCode → chip color. anything unlisted is plain in-transit.
 CLASS_BY_CODE = {
-    "DL": "green",   # delivered — it's here, go touch grass (and cardboard)
-    "OD": "green",   # out for delivery — the truck approaches
-    "IN": "yellow",  # label created, nothing scanned — schrödinger's box
-    "DE": "red",     # delivery exception
-    "SE": "red",     # shipment exception
-    "CA": "red",     # cancelled
-    "RS": "red",     # returned to shipper — the box rejected you
+    "DL": "green",
+    "OD": "green",
+    "IN": "yellow",
+    "DE": "red",
+    "SE": "red",
+    "CA": "red",
+    "RS": "red",
 }
 PRIORITY = {"red": 4, "yellow": 3, "green": 2, "transit": 1}
 
@@ -73,7 +48,6 @@ def post_json(url, body, headers):
 
 
 def fedex_token(creds):
-    # cached oauth token — fedex hands out ~1h leases, don't ask twice
     try:
         with open(TOKEN_CACHE) as f:
             tok = json.load(f)
@@ -100,7 +74,6 @@ def fedex_token(creds):
 
 
 def fedex_eta(tr):
-    # prefer explicit date events, fall back to the delivery window's end
     dates = {d.get("type"): d.get("dateTime") for d in tr.get("dateAndTimes") or []}
     raw = dates.get("ACTUAL_DELIVERY") or dates.get("ESTIMATED_DELIVERY")
     if not raw:
@@ -115,7 +88,6 @@ def fedex_eta(tr):
 
 
 def track_fedex(cfg, packages):
-    """one batch call for all fedex packages → {tracking: result}."""
     creds = dict(cfg.get("fedex") or {})
     cid = (creds.get("client_id") or "").strip()
     if not cid or cid.startswith("PASTE"):
@@ -154,7 +126,6 @@ def track_fedex(cfg, packages):
     return results
 
 
-# add a carrier: write track_<name>(cfg, packages) → {tracking: result}, list it here
 CARRIERS = {"fedex": track_fedex}
 
 
@@ -209,7 +180,7 @@ def cache_key(cfg):
 def main():
     cfg = load_config()
     if not cfg or not cfg.get("packages"):
-        emit({"text": ""})  # nothing tracked → chip vanishes entirely
+        emit({"text": ""})
         return
 
     if "--open" in sys.argv:
@@ -237,7 +208,6 @@ def main():
             json.dump({"key": key, "emit": data}, f)
         emit(data)
     except Exception as e:
-        # api unreachable / auth blew up — serve stale if we have it
         if cached:
             cached = dict(cached, tooltip=cached.get("tooltip", "") + "\n(cached — fetch failed)")
             emit(cached)

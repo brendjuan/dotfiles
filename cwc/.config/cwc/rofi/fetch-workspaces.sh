@@ -1,9 +1,4 @@
 #!/usr/bin/env bash
-# git-fetch every repo under ~/Workspace(s)/* — loud, verbose, glitchcore.
-# also fast-forwards each repo's default branch (main/master) to origin WITHOUT
-# checking it out, so `main` stays current no matter which branch a workspace is
-# parked on. the checkout / current branch / working tree is never touched.
-# meant to run inside a float-term kitty so you can watch the carnage.
 
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 WS_DIR=$("$SCRIPT_DIR/find-workspace-dir.sh") || {
@@ -12,7 +7,6 @@ WS_DIR=$("$SCRIPT_DIR/find-workspace-dir.sh") || {
     exit 1
 }
 
-# palette (matches glitchcore: teal primary, red urgent, amber warn)
 TEAL=$'\033[38;2;0;255;180m'
 RED=$'\033[38;2;255;0;80m'
 AMBER=$'\033[38;2;255;85;0m'
@@ -25,8 +19,6 @@ printf '%s%s── FETCHING ALL THE THINGS in %s ──%s\n\n' "$BOLD" "$RED" "$
 total=0 fetched=0 skipped=0 failed=0 pulled=0 mained=0
 start=$SECONDS
 
-# resolve a repo's default branch: prefer origin/HEAD, else fall back to
-# whichever of main/master exists on the remote.
 default_branch() {
     local repo=$1 b
     b=$(git -C "$repo" symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null \
@@ -58,11 +50,6 @@ while IFS= read -r name; do
         ((failed++))
     fi
 
-    # try a fast-forward pull, but only when it's safe to do so:
-    #   - on an actual branch (not detached)
-    #   - that branch tracks an upstream
-    #   - the working tree is clean (no uncommitted local changes)
-    # --ff-only guarantees we never merge or clobber diverged local commits.
     if [[ -z "$branch" ]]; then
         printf '%s    ⊘ detached HEAD, skipping pull%s\n' "$DIM" "$RST"
     elif ! git -C "$repo" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
@@ -75,11 +62,6 @@ while IFS= read -r name; do
         printf '%s    ✖ pull failed (diverged?) for %s%s\n' "$RED" "$name" "$RST"
     fi
 
-    # keep the local default branch (main/master) current WITHOUT changing the
-    # checkout. when main isn't the current branch we fast-forward its ref
-    # straight from the already-fetched origin/<main> via `fetch .` (no network,
-    # ff-only so a diverged local main is never clobbered; HEAD/index/worktree
-    # are untouched). when main IS checked out, the pull above already did it.
     main=$(default_branch "$repo")
     if [[ -n "$main" && "$branch" != "$main" ]] \
         && git -C "$repo" show-ref --verify --quiet "refs/heads/$main" \
@@ -87,7 +69,7 @@ while IFS= read -r name; do
         cur=$(git -C "$repo" rev-parse "refs/heads/$main")
         tgt=$(git -C "$repo" rev-parse "refs/remotes/origin/$main")
         if [[ "$cur" == "$tgt" ]]; then
-            : # main already current, nothing to do
+            :
         elif git -C "$repo" fetch --no-tags . "refs/remotes/origin/$main:refs/heads/$main" >/dev/null 2>&1; then
             printf '%s    ⇡ fast-forwarded %s → origin/%s (checkout untouched)%s\n' "$TEAL" "$main" "$main" "$RST"
             ((mained++))

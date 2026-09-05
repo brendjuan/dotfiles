@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-rivercast.py — schuylkill river quality status for waybar.
-scrapes phillyrivercast.org. red = the bacteria are partying. don't get in.
-emits the waybar custom-module json contract: {text, tooltip, class, alt}.
-"""
 import html
 import json
 import os
@@ -14,9 +8,9 @@ import urllib.request
 
 URL = "https://www.phillyrivercast.org/"
 CACHE = os.path.expanduser("~/.cache/rivercast.json")
-TTL = 1800  # site updates daily; 30min cache is plenty
+TTL = 1800
 
-ICON = "\U000f0608"  # nf-md-rowing — boathouse row energy
+ICON = "\U000f0608"
 
 
 def fetch():

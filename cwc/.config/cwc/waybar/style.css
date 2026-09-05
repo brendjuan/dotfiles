@@ -1,6 +1,3 @@
-/* WAYBAR 9000 v3.0 - TOP SECRET FISH INTELLIGENCE EDITION */
-/* PROPERTY OF DEEPWATER INTELLIGENCE BUREAU - do NOT question the colors */
-
 * {
     font-family: "Hack Nerd Font", monospace;
     font-size: 10px;
@@ -8,7 +5,6 @@
 }
 
 window#waybar {
-    /* classified void - deep ocean darkness */
     background-color: rgba(2, 0, 8, 0.92);
     color: #00ffb4;
 }
@@ -18,7 +14,6 @@ window#waybar {
     margin: 0;
     border: none;
     border-radius: 0;
-    /* ghosted out - lost signal in the deep */
     color: rgba(0, 255, 180, 0.22);
     background: transparent;
     font-size: 12px;
@@ -26,58 +21,47 @@ window#waybar {
 }
 
 #tags button.occupied {
-    /* something lives here - sonar contact */
     color: rgba(0, 255, 180, 0.60);
 }
 
 #tags button.focused {
-    /* ACTIVE - teal lock ring energy, red classification underline */
     color: #00ffb4;
     background-color: rgba(0, 255, 180, 0.08);
     border-bottom: 2px solid #ff0050;
 }
 
 #tags button.urgent {
-    /* SECURITY BREACH - classification red */
     color: #ff0050;
     background-color: rgba(255, 0, 80, 0.1);
 }
 
 #tags button:hover {
-    /* sonar ping on hover */
     color: #00ffd0;
     background-color: rgba(0, 255, 200, 0.06);
 }
 
 #custom-zenoh {
-    /* zenoh operator bridge toggle — plain glyph button, same as the
-       high-contrast switch. state lives in the color, not a chip. */
     padding: 0 8px;
     font-size: 12px;
 }
 
 #custom-zenoh.off {
-    /* bridge down — ghosted so it reads as "nothing on the wire" */
     color: rgba(0, 255, 180, 0.28);
 }
 
 #custom-zenoh.on {
-    /* bridge up — full teal, we are talking to the vehicle */
     color: #00ffb4;
     font-weight: bold;
 }
 
 #custom-mouse {
-    /* logitech mouse battery — plain glyph like the zenoh switch, state lives
-       in the color. dpi and details are one click away */
     padding: 0 8px;
-    margin-left: 6px;  /* breathing room after the last tray icon */
+    margin-left: 6px;
     font-size: 12px;
     color: #00ffb4;
 }
 
 #custom-mouse.off {
-    /* mouse not connected — ghosted */
     color: rgba(0, 255, 180, 0.28);
 }
 
@@ -87,12 +71,10 @@ window#waybar {
 }
 
 #custom-mouse.warning {
-    /* 20% or less — charge it soon */
     color: #ff5500;
 }
 
 #custom-mouse.critical {
-    /* 10% or less — the mouse is about to go quiet */
     color: #ff0050;
 }
 
@@ -103,15 +85,13 @@ window#waybar {
 
 #custom-recording {
     padding: 0 8px;
-    /* bleeding red - the eye is watching */
     color: #ff0050;
     font-weight: bold;
 }
 
 #custom-rivercast {
-    /* schuylkill river telemetry — chip background broadcasts the rating */
-    padding: 0 6px;  /* rowing glyph centers naturally — symmetric */
-    margin: 2px 0 2px 4px;  /* flush against next chip on the right */
+    padding: 0 6px;
+    margin: 2px 0 2px 4px;
     font-size: 12px;
     font-weight: bold;
     color: #020008;
@@ -119,27 +99,23 @@ window#waybar {
 }
 
 #custom-rivercast.green {
-    /* river clear — go forth */
     background-color: #00ffb4;
     color: #020008;
 }
 
 #custom-rivercast.yellow {
-    /* approach with caution — the river is sus */
     background-color: #ff5500;
     color: #020008;
 }
 
 #custom-rivercast.red {
-    /* DO NOT TOUCH WATER — bacteria have rights */
     background-color: #ff0050;
     color: #020008;
 }
 
 #custom-github {
-    /* github.com health — same chip treatment */
-    padding: 0 7px 0 5px;  /* octocat sat slightly right — shift it left 1px */
-    margin: 2px 0;  /* flush against neighbors on both sides */
+    padding: 0 7px 0 5px;
+    margin: 2px 0;
     font-size: 12px;
     font-weight: bold;
     color: #020008;
@@ -162,9 +138,8 @@ window#waybar {
 }
 
 #custom-package {
-    /* where-is-my-stuff telemetry — same chip treatment */
     padding: 0 6px;
-    margin: 2px 0;  /* flush against neighbors on both sides */
+    margin: 2px 0;
     font-size: 12px;
     font-weight: bold;
     color: #020008;
@@ -172,26 +147,21 @@ window#waybar {
 }
 
 #custom-package.green {
-    /* delivered / out for delivery — the box cometh */
     background-color: #00ffb4;
     color: #020008;
 }
 
 #custom-package.yellow {
-    /* label created or creds missing — schrödinger's shipment */
     background-color: #ffd000;
     color: #020008;
 }
 
 #custom-package.red {
-    /* delivery exception — the box is LOST IN THE VOID */
     background-color: #ff0050;
     color: #020008;
 }
 
 #custom-ccm-battery {
-    /* CCM pack telemetry off ros2 — volts and amps, same chip treatment.
-       flush against both neighbours; claude-usage keeps the 4px outer gap */
     padding: 0 6px;
     margin: 2px 0;
     font-size: 12px;
@@ -201,40 +171,33 @@ window#waybar {
 }
 
 #custom-ccm-battery.green {
-    /* pack above 50% — plenty of electrons */
     background-color: #00ffb4;
     color: #020008;
 }
 
 #custom-ccm-battery.yellow {
-    /* 30–50% — start thinking about the charger */
     background-color: #ffd000;
     color: #020008;
 }
 
 #custom-ccm-battery.orange {
-    /* 15–30% — the boat is getting thirsty */
     background-color: #ff5500;
     color: #020008;
 }
 
 #custom-ccm-battery.red {
-    /* under 15% — SURFACE NOW */
     background-color: #ff0050;
     color: #020008;
 }
 
 #custom-ccm-battery.down {
-    /* no comms to the pack — chip stays, lights go out. keeps the cluster solid
-       so nothing jumps sideways when the boat wakes up */
     background-color: rgba(0, 255, 180, 0.22);
     color: rgba(0, 255, 180, 0.45);
 }
 
 #custom-claude-usage {
-    /* claude session/weekly limit telemetry — same chip treatment */
-    padding: 0 8px 0 4px;  /* brain sits ~2px right of center — nudge left */
-    margin: 2px 4px 2px 0;  /* flush against previous chip on the left */
+    padding: 0 8px 0 4px;
+    margin: 2px 4px 2px 0;
     font-size: 12px;
     font-weight: bold;
     color: #020008;
@@ -242,25 +205,21 @@ window#waybar {
 }
 
 #custom-claude-usage.green {
-    /* under 75% — plenty of runway */
     background-color: #00ffb4;
     color: #020008;
 }
 
 #custom-claude-usage.yellow {
-    /* 75–85% — easing into the danger zone */
     background-color: #ffd000;
     color: #020008;
 }
 
 #custom-claude-usage.orange {
-    /* 85–90% — wrap it up, friend */
     background-color: #ff5500;
     color: #020008;
 }
 
 #custom-claude-usage.red {
-    /* >90% — context budget on fire */
     background-color: #ff0050;
     color: #020008;
 }
@@ -274,12 +233,10 @@ window#waybar {
 }
 
 #taskbar button:hover {
-    /* sonar pulse on hover */
     background-color: rgba(0, 255, 180, 0.10);
 }
 
 #taskbar button.active {
-    /* locked on - this one has your attention */
     background-color: rgba(0, 255, 180, 0.08);
     border-bottom: 2px solid #ff0050;
 }
@@ -288,13 +245,11 @@ window#waybar {
     padding: 0 8px;
     color: #ff0050;
     font-size: 11px;
-    /* first module on the right - no left divider needed */
 }
 
 #backlight {
     padding: 0 8px;
     color: #00ffb4;
-    /* teal scanline separators - sonar grid bleeds between segments */
     border-left: 1px solid rgba(0, 255, 180, 0.20);
 }
 
@@ -336,7 +291,6 @@ window#waybar {
 
 #clock {
     padding: 0 8px;
-    /* time is a classified construct */
     color: #ff0050;
     border-left: 1px solid rgba(0, 255, 180, 0.20);
 }

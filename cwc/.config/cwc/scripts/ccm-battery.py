@@ -1,31 +1,3 @@
-#!/usr/bin/env python3
-"""
-ccm-battery.py — CCM pack voltage + current for waybar, over the Foxglove bridge.
-
-connects to the vehicle's foxglove_bridge websocket (the same endpoint the
-Foxglove app uses) and subscribes to /ccm/battery (sensor_msgs/BatteryState).
-prints one waybar json line per redraw. this is a *continuous* module (no
-"interval" in config.jsonc): waybar keeps us alive and reads stdout, so we
-choose our own refresh rate.
-
-SUBSCRIBE-ONLY, BY DESIGN. this used to be an rclpy node, but any dds
-participant on the operator laptop pollutes the vehicle's graph (discovery,
-rosout, parameter services), and feeding the topic through a local
-zenoh-bridge-ros2dds made that bridge advertise a phantom pub route that
-blocked the real battery data from entering zenoh. the foxglove websocket
-protocol has no such feedback path: the bridge node on the VEHICLE does the
-dds work, and this client only ever sends the handshake and one "subscribe"
-request. it advertises nothing, publishes nothing, and touches neither dds
-nor zenoh.
-
-two speeds:
-  LIVE — samples arriving: redraw once a second, never faster.
-  DOWN — bridge unreachable, topic not advertised, or silent for STALE_AFTER
-         seconds: redraw / reconnect every 30s.
-
-BatteryState is decoded from cdr by hand (see CdrReader) so the chip needs no
-ros install at all — just python3 + the "websockets" package.
-"""
 import asyncio
 import json
 import math
@@ -35,21 +7,15 @@ import sys
 import time
 
 URL = "ws://ccm-cm5-0:8765"
-# the bridge picks one of these. foxglove-bridge 3.x (built on
-# foxglove-sdk-cpp) answers only to "foxglove.sdk.v1"; the older
-# websocketpp bridge answered only to "foxglove.websocket.v1". a bridge
-# that wants a name we did not offer rejects the handshake with HTTP 400,
-# so we offer both and let it choose. the wire protocol is the same.
 SUBPROTOCOLS = ["foxglove.sdk.v1", "foxglove.websocket.v1"]
 TOPIC = "/ccm/battery"
 
-LIVE_INTERVAL = 1.0    # hardest we redraw once comms are up
-DOWN_INTERVAL = 30.0   # reconnect / redraw cadence while the topic is dead
-STALE_AFTER = 5.0      # no sample for this long = comms are down
+LIVE_INTERVAL = 1.0
+DOWN_INTERVAL = 30.0
+STALE_AFTER = 5.0
 
-ICON = "󱐋"  # nf-md-lightning_bolt — pack telemetry, not the laptop battery
+ICON = "󱐋"
 
-# sensor_msgs/BatteryState constants, spelled out for the tooltip
 STATUS = {0: "unknown", 1: "charging", 2: "discharging", 3: "not charging", 4: "full"}
 HEALTH = {
     0: "unknown", 1: "good", 2: "overheat", 3: "dead", 4: "overvoltage",
@@ -59,14 +25,7 @@ HEALTH = {
 ECHO = "--echo" in sys.argv[1:]
 
 
-# ── cdr decoding ──────────────────────────────────────────────────────
 class CdrReader:
-    """minimal xcdr1 reader — just what BatteryState needs.
-
-    layout: 4-byte encapsulation header (kind uint16 big-endian: 0x0000 CDR_BE,
-    0x0001 CDR_LE; 2 option bytes), then the fields. alignment is relative to
-    the first byte AFTER the header.
-    """
 
     def __init__(self, buf):
         if len(buf) < 4:
@@ -99,7 +58,7 @@ class CdrReader:
         return self._take("f", 4, 4)
 
     def string(self):
-        n = self.u32()  # length including the terminating null
+        n = self.u32()
         raw = self.buf[self.pos:self.pos + n]
         self.pos += n
         return raw.rstrip(b"\x00").decode("utf-8", "replace")
@@ -113,7 +72,6 @@ class CdrReader:
 
 
 class BatteryState:
-    """field-for-field mirror of sensor_msgs/msg/BatteryState (jazzy)."""
 
     def __init__(self, payload):
         c = CdrReader(payload)
@@ -137,9 +95,7 @@ class BatteryState:
         self.serial_number = c.string()
 
 
-# ── formatting (unchanged waybar contract: same classes, same layout) ─
 def finite(x):
-    """BatteryState fields are allowed to be NaN. treat those as absent."""
     try:
         return x is not None and math.isfinite(x)
     except TypeError:
@@ -151,7 +107,6 @@ def unit(value, suffix, digits=1):
 
 
 def pack_percent(msg):
-    """ros spec says percentage is 0..1. some firmware sends 0..100 — take both."""
     p = msg.percentage
     if not finite(p):
         return None
@@ -159,7 +114,6 @@ def pack_percent(msg):
 
 
 def color_class(pct):
-    # unknown charge = no opinion, stay teal
     if pct is None:
         return "green"
     if pct < 15:
@@ -221,14 +175,8 @@ def draw_down(reason, msg=None, age=None):
 
 
 def why(e):
-    """short, readable reason for the tooltip.
-
-    the exception class name alone hides the case that matters: a rejected
-    handshake (HTTP 400) means the bridge wanted a subprotocol we did not
-    offer, and that reads exactly like "the host is down".
-    """
-    status = getattr(e, "status_code", None)          # websockets < 12
-    if status is None:                                # websockets >= 12
+    status = getattr(e, "status_code", None)
+    if status is None:
         status = getattr(getattr(e, "response", None), "status_code", None)
     if status is not None:
         return f"bridge refused the handshake (HTTP {status})"
@@ -239,22 +187,19 @@ def why(e):
 
 
 def echo_sample(msg):
-    """--echo mode: one decoded sample per line, for the float terminal."""
     print(json.dumps({k: v for k, v in vars(msg).items()}, default=str), flush=True)
 
 
-# ── the client ────────────────────────────────────────────────────────
 class State:
     def __init__(self):
-        self.msg = None      # last sample that carried a real reading
-        self.at = 0.0        # when that sample arrived
-        self.seen_at = 0.0   # when ANY sample arrived, blank frames included
-        self.blank = False   # was the most recent sample a blank frame?
+        self.msg = None
+        self.at = 0.0
+        self.seen_at = 0.0
+        self.blank = False
         self.last_emit = 0.0
         self.was_live = None
 
     def forget(self):
-        """drop the cached reading — the connection went away under us."""
         self.msg = None
         self.blank = False
         self.was_live = None
@@ -263,14 +208,6 @@ class State:
         return self.msg is not None and (time.monotonic() - self.at) < STALE_AFTER
 
     def observe(self, msg):
-        """record one decoded sample.
-
-        the broadcaster sometimes publishes a blank frame: every float NaN,
-        present false, status "not charging". that means "no reading right
-        now", not "the pack is at 0V". they arrive in ones and twos between
-        good samples, so keep showing the last real reading and let the normal
-        STALE_AFTER timeout decide when to give up on it.
-        """
         self.seen_at = time.monotonic()
         self.blank = not (finite(msg.voltage) or finite(msg.current))
         if not self.blank:
@@ -299,7 +236,6 @@ def down_reason(state, channel_id):
 
 
 async def session(ws, state):
-    """one connected websocket: find the channel, subscribe, pump samples."""
     import websockets
     channel_id = None
     sub_id = 1
@@ -314,7 +250,6 @@ async def session(ws, state):
             return
 
         if isinstance(raw, (bytes, bytearray)):
-            # 0x01 = MessageData: u8 opcode, u32 subscription id, u64 receive ts, payload
             if raw[0] == 0x01 and len(raw) > 13:
                 try:
                     msg = BatteryState(bytes(raw[13:]))
@@ -331,7 +266,6 @@ async def session(ws, state):
                 for ch in data.get("channels", []):
                     if ch.get("topic") == TOPIC and channel_id is None:
                         channel_id = ch["id"]
-                        # the ONLY request we ever make of the graph
                         await ws.send(json.dumps({
                             "op": "subscribe",
                             "subscriptions": [{"id": sub_id, "channelId": channel_id}],
@@ -371,9 +305,6 @@ async def main_loop():
 def main():
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     if not ECHO:
-        # first line out, before the connect: waybar hides a custom module until
-        # it prints something, and without this the chip cluster jumps sideways
-        # after every waybar reload (e.g. a high-contrast swap).
         emit(f"{ICON} --",
              f"CCM BATTERY :: starting\n  source:  {URL} → {TOPIC}\n  state:   connecting",
              "down")

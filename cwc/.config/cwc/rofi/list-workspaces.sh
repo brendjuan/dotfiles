@@ -1,15 +1,6 @@
 #!/usr/bin/env bash
-# list workspace dirs as Pango-marked-up "<name> - <branch>" lines, sorted by name
-# also exposes a `strip` mode that recovers the bare dir name from a selection
-#
-# usage:
-#   list-workspaces.sh <workspace-dir>           — print markup list
-#   list-workspaces.sh strip "<marked-up line>"  — print bare dir name
-#
-# callers must pass `-markup-rows` to rofi when displaying the list
 
 if [[ "$1" == "strip" ]]; then
-    # drop pango tags, then trim the " - <branch>" suffix
     bare=$(printf '%s' "$2" | sed 's/<[^>]*>//g')
     printf '%s\n' "${bare%% - *}"
     exit 0

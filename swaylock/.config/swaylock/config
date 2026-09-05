@@ -1,22 +1,12 @@
-# SWAGLOCK 9000 v3.0 - TOP SECRET FISH INTELLIGENCE EDITION
-# "the clearance code is clearance code"
-# PROPERTY OF DEEPWATER INTELLIGENCE BUREAU
-
-# the sacred wallpaper (do NOT question it)
 image=~/.config/swaylock/img/lockscreen.png
 scaling=fill
 
-# MEGA CHONK indicator - wider than my will to live
 indicator-radius=169
 indicator-thickness=42
 indicator-idle-visible
 
-# expose your skill issue to the whole room
 show-failed-attempts
 
-# ---- IDLE STATE: classified terminal ----
-# deep dark void with teal/cyan ring to match the cyberspace grid
-# like staring into a sonar display at 20,000 leagues
 inside-color=02000866
 ring-color=00ffb488
 line-uses-inside
@@ -25,28 +15,20 @@ separator-color=ff005030
 font=monospace
 font-size=32
 
-# ---- TYPING: fishnet protocol active ----
-# teal glow intensifies, green matrix text, magenta key highlights
 inside-ver-color=020a0888
 ring-ver-color=00ffb4cc
 text-ver-color=00ffa0ff
 key-hl-color=ff0050bb
 
-# ---- WRONG: security breach detected ----
-# deep red like the classification banners, maximum threat energy
 inside-wrong-color=180008aa
 ring-wrong-color=ff0050ff
 text-wrong-color=ff3333ff
 bs-hl-color=ff0000ff
 
-# ---- CLEARED: signal lost ----
-# dim teal fade-out, like a sonar ping dissipating
 inside-clear-color=02000877
 ring-clear-color=00ffb466
 text-clear-color=00ff8088
 
-# ---- CAPS LOCK: THREAT LEVEL ANGLERFISH ----
-# warning amber with red highlights - something is wrong in the deep
 ring-caps-lock-color=ff5500ee
 inside-caps-lock-color=180800aa
 text-caps-lock-color=ff8800ff

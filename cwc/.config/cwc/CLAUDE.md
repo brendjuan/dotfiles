@@ -1,42 +1,46 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working in `~/.config/cwc/`.
 
-## What This Is
+## What this is
 
-Configuration for **cwc** (cwcwm), a Wayland compositor with Lua scripting. This lives at `~/.config/cwc/` and is loaded at compositor startup. cwc uses an AwesomeWM-inspired Lua API with libraries like `cuteful`, `gears`, and a global `cwc` object.
+Configuration for **cwc** (cwcwm), a Wayland compositor scripted in Lua. cwc loads `rc.lua` at startup.
+The API is modeled on AwesomeWM: a global `cwc` object plus the `cuteful` and `gears` libraries.
 
-## Architecture
+## Files
 
-- **rc.lua** — Entry point. Loads config, runs oneshot on first start, sets up keybinds/mousebinds, configures screens/tags, and defines client rules and signal handlers.
-- **conf.lua** — Returns a config table (cursor, keyboard, border, gaps settings) consumed by `config.init()`.
-- **keybind.lua** — All keyboard bindings. Uses `cwc.kbd.bind()` and bindmap submaps. MODKEY is `mod.LOGO` (or `mod.ALT` when nested).
-- **mousebind.lua** — Pointer bindings, swipe gestures, and a keyboard-as-mouse submap (`MOD+Z`).
-- **oneshot.lua** — Startup-only commands: autostart apps (swaybg, waybar, playerctld, swayidle, copyq), env vars, dbus setup, plugin loading (cwcle, flayout, dwl-ipc).
-- **rofi/glitchcore.rasi** — Rofi theme matching the glitchcore aesthetic.
-- **waybar/** — Waybar config and styles using dwl/tags IPC protocol. Tag labels use katakana characters.
+- `rc.lua`: entry point. Applies `conf.lua`, runs `oneshot.lua` on first start, loads the key and mouse bindings and the battery monitor, configures screens, and defines client rules and signal handlers. Tags 10 to 12 are temporary tags for Gazebo, RViz, and Foxglove windows.
+- `conf.lua`: the table passed to `config.init()` (cursor, keyboard, border, gaps).
+- `keybind.lua`: keyboard bindings through `cwc.kbd.bind()`. `MODKEY` is `mod.LOGO`, or `mod.ALT` in a nested session. `MOD+W` enters a submap for moving floating windows.
+- `mousebind.lua`: pointer bindings, swipe gestures, and a keyboard-as-mouse submap (`MOD+Z`).
+- `oneshot.lua`: startup-only work: plugins, autostart programs, environment variables.
+- `battery.lua`: low-battery warnings. Starts the overlay scripts in `scripts/`.
+- `rofi/`: rofi themes and the scripts behind the `MOD+C` command menu.
+- `scripts/`: waybar module scripts and the high-contrast toggle.
+- `waybar/`: waybar config and styles. `style-active.css` is a local copy that the toggle rewrites.
 
-## Key Patterns
+## Patterns
 
-- The global `cwc` object is the compositor API — signals (`cwc.connect_signal`), spawning (`cwc.spawn_with_shell`), client/screen/pointer access.
-- Enums come from `cuteful.enum` (layout modes, directions, modifiers, libinput constants).
-- Tags/workspaces 1-9 with layout modes: MASTER (default), FLOATING (2,8,9), BSP (4,5,6).
-- Client rules use `crules.add_client_rule` with `where`/`set`/`run` fields.
-- Submaps (bindmaps) allow modal key layers — see `kbd.create_bindmap()` usage.
+- `cwc.connect_signal` for signals, `cwc.spawn_with_shell` to start programs.
+- Enums come from `cuteful.enum`.
+- Client rules use `crules.add_client_rule` with `where`, `set`, and `run`.
+- `kbd.create_bindmap()` creates a modal key layer.
+- High-contrast mode is on when `~/.cache/high-contrast-mode` exists. Every script reads that file. None keeps its own state.
 
-## Visual Theme
+## Style
 
-The vibe is **meme-y, sketchy glitchcore** — intentionally unhinged CRT-aesthetic energy. Code comments, waybar config, and CSS should match this tone (irreverent, self-aware, slightly chaotic). New UI elements must stay on-brand.
+- No code comments.
+- User-facing text (notifications, tooltips, terminal banners) keeps the glitchcore tone: irreverent and a little chaotic.
+- Palette, shared by rofi, waybar, swaylock, and kitty:
+  - Background `rgba(2, 0, 8, 0.92)`
+  - Primary `#00ffb4`
+  - Urgent `#ff0050`
+  - Dim `rgba(0, 255, 180, 0.22)`
+  - Warning `#ff5500`
+  - Font: Hack Nerd Font
+  - Tag labels: katakana (ア イ ウ エ オ カ キ ク ケ) plus GZ, RV, FG
 
-Consistent palette across rofi, waybar, and swaylock:
-- Background: `rgba(2, 0, 8, ~0.92)` (near-black blue void)
-- Primary: `#00ffb4` (teal/cyan)
-- Accent/urgent: `#ff0050` (classification red)
-- Dim/ghost: `rgba(0, 255, 180, 0.22)`
-- Warning: `#ff5500` (amber)
-- Font: Hack Nerd Font
-- Katakana tag labels in waybar (ア イ ウ エ オ カ キ ク ケ)
+## Applying changes
 
-## Applying Changes
-
-Reload the compositor config with `MOD+CTRL+R` (calls `cwc.reload`). Waybar uses its own config path specified in oneshot.lua.
+`MOD+CTRL+R` reloads the compositor config.
+Waybar is started once from `oneshot.lua`. Restart it by hand after changing its config.

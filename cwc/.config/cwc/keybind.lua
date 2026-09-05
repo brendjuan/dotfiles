@@ -1,7 +1,3 @@
--- Keybinding
-
--- for keyname see https://github.com/xkbcommon/libxkbcommon/blob/master/include/xkbcommon/xkbcommon-keysyms.h
-
 local cful = require("cuteful")
 local gears = require("gears")
 local cwc = cwc
@@ -13,15 +9,12 @@ local direction = enum.direction
 local MODKEY = mod.LOGO
 local TERMINAL = "kitty"
 
--- prevent hotkey conflict on nested session
 if cwc.is_nested() then
     MODKEY = mod.ALT
 end
 
-------------------- keyboard binding --------------------
 local kbd = cwc.kbd
 
----------------- compositor lifecycle
 kbd.bind({ MODKEY, mod.CTRL }, "Delete", cwc.quit, { description = "exit cwc", group = "cwc" })
 kbd.bind({ MODKEY, mod.CTRL }, "r", cwc.reload, { description = "reload configuration", group = "cwc" })
 kbd.bind({ MODKEY }, "Delete", function()
@@ -42,9 +35,6 @@ for i = 1, 12 do
     end)
 end
 
------------------ CLIENT COMMANDS ------------------------
-
------------------- general
 kbd.bind({ MODKEY, mod.SHIFT }, "c", function()
     local c = cwc.client.focused()
     if c then c:close() end
@@ -108,7 +98,6 @@ kbd.bind({ MODKEY, mod.CTRL }, "0", function()
     if c then c.sticky = not c.sticky end
 end, { description = "toggle client always visible", group = "client" })
 
---------------------- stack based
 kbd.bind({ MODKEY, mod.CTRL }, "j", function()
     cful.client.focusidx(1)
 end, { description = "focus next client relative by index", group = "client" })
@@ -146,7 +135,6 @@ kbd.bind({ MODKEY, mod.SHIFT }, "bracketright", function()
     new_screen:focus()
 end, { description = "cycle move focused client to next screen", group = "client" })
 
---------------------- direction based
 kbd.bind(MODKEY, "j", function()
     local c = cwc.client.focused()
     if c then
@@ -179,7 +167,6 @@ kbd.bind(MODKEY, "l", function()
     end
 end, { description = "focus right", group = "client" })
 
--------------------- container operation
 kbd.bind(MODKEY, "t", function()
     local c = cwc.client.focused()
     if c then c.container.insert_mark = true end
@@ -195,7 +182,6 @@ kbd.bind({ mod.LOGO, mod.SHIFT }, "Tab", function()
     if c then c.container:focusidx(-1) end
 end, { description = "cycle prev to toplevel inside container", group = "client" })
 
--------------------------------- appearance
 kbd.bind({ MODKEY, mod.SHIFT }, "minus", function()
     local c = cwc.client.focused()
     if c then c.opacity = c.opacity - 0.1 end
@@ -206,9 +192,6 @@ kbd.bind({ MODKEY, mod.SHIFT }, "equal", function()
     if c then c.opacity = c.opacity + 0.1 end
 end, { description = "increase opacity", group = "client", repeated = true })
 
----------------- FLOATING WINDOW OPERATION -----------------
-
----------------- client movement
 local move_speed = 30
 
 local function move_left()
@@ -253,7 +236,6 @@ kbd.bind(MODKEY, "Right", move_right, move_right_opt)
 kbd.bind(MODKEY, "Up", move_up, move_up_opt)
 kbd.bind(MODKEY, "Down", move_down, move_down_opt)
 
---------------------- client resize
 local size_interval = 20
 local function resize_left()
     local c = cwc.client.focused()
@@ -293,8 +275,6 @@ kbd.bind({ MODKEY, mod.SHIFT }, "Right", resize_right, resize_right_opt)
 kbd.bind({ MODKEY, mod.SHIFT }, "Up", resize_up, resize_up_opt)
 kbd.bind({ MODKEY, mod.SHIFT }, "Down", resize_down, resize_down_opt)
 
---------------------- SCREEN LAYOUT ------------------------
-
 kbd.bind({ MODKEY }, "bracketright", function()
     cful.screen.focus_relative(1)
 end, { description = "focus the next screen", group = "screen" })
@@ -302,7 +282,6 @@ kbd.bind({ MODKEY }, "bracketleft", function()
     cful.screen.focus_relative(-1)
 end, { description = "focus the previous screen", group = "screen" })
 
------------------ tag
 for i = 1, 9 do
     local i_str = tostring(i)
     kbd.bind(MODKEY, i_str, function()
@@ -330,7 +309,6 @@ for i = 1, 9 do
     end, { description = "toggle focused client on tag #" .. i_str, group = "tag" })
 end
 
--- sim tag indices, kept in sync with SIM_TAGS in rc.lua
 local SIM_TAG_CYCLE = { 10, 11, 12 }
 local sim_cycle_idx = 1
 kbd.bind(MODKEY, "0", function()
@@ -358,11 +336,9 @@ kbd.bind(MODKEY, "period", function()
     cful.tag.viewnext()
 end, { description = "view prev workspace/tag", group = "tag" })
 
--- backtick/tilde key
 kbd.bind(MODKEY, "grave", cful.tag.history.restore,
     { description = "activate last activated tags", group = "tag" })
 
--------------------- tag config
 kbd.bind(MODKEY, "equal", function()
     cful.tag.incgap(1)
 end, { description = "increase gaps", group = "layout", repeated = true })
@@ -371,7 +347,6 @@ kbd.bind(MODKEY, "minus", function()
     cful.tag.incgap(-1)
 end, { description = "decrease gaps", group = "layout", repeated = true })
 
------------------------ bsp hotkey
 kbd.bind(MODKEY, "e", function()
     local c = cwc.client.focused()
     if not c then return end
@@ -399,7 +374,6 @@ kbd.bind({ mod.LOGO, mod.ALT }, "h", function()
     end
 end, { description = "decrease master/bsp width factor", group = "layout", repeated = true })
 
---------------- layout commands
 kbd.bind(MODKEY, "space", function()
     local tag = cwc.screen.focused().selected_tag
     tag.layout_mode = (tag.layout_mode + 1) % enum.layout_mode.LENGTH
@@ -431,16 +405,12 @@ kbd.bind({ MODKEY, mod.CTRL }, "l", function()
     cful.tag.incncol(-1)
 end, { description = "decrease the number of columns", group = "layout" })
 
----------------- launcher
 kbd.bind(MODKEY, "Return", function()
     cwc.spawn_with_shell("kitty || alacritty || wezterm || xterm || st")
 end, { description = "open a terminal", group = "launcher" })
 kbd.bind({ MODKEY }, "F1", function()
     cwc.spawn_with_shell("firefox")
 end, { description = "open a web browser", group = "launcher" })
--- fire on key-release so phantom auto-repeats can't bleed into rofi's grab.
--- the armed closure stops MOD+SHIFT+<key> from also triggering MOD+<key>'s
--- release (cwc matches each event by current modifier mask).
 local function bind_release(mods, key, action, opts)
     local armed = false
     kbd.bind(mods, key,
@@ -450,8 +420,6 @@ local function bind_release(mods, key, action, opts)
 end
 
 bind_release(MODKEY, "r", function()
-    -- pick the rofi theme from high-contrast state so the launcher isn't a dark
-    -- low-contrast window in sunlight mode (matches rofi/commands.sh).
     cwc.spawn_with_shell(
         'pkill rofi; sleep 0.05 && '
         .. 'TH=~/.config/cwc/rofi/glitchcore.rasi; '
@@ -463,8 +431,6 @@ bind_release(MODKEY, "c", function()
     cwc.spawn_with_shell('pkill rofi; sleep 0.05 && ~/.config/cwc/rofi/commands.sh')
 end, { description = "custom commands menu", group = "launcher" })
 
--- auto-generated keybind cheatsheet (rofi). reads cwc.kbd.default_member,
--- groups + sorts, writes pango markup to /tmp, hands off to a shell wrapper.
 local MOD_PRETTY = { LOGO = "Mod", CTRL = "Ctrl", SHIFT = "Shift", ALT = "Alt" }
 local MOD_ORDER  = { "LOGO", "CTRL", "ALT", "SHIFT" }
 local function pango_escape(s)
@@ -512,7 +478,6 @@ bind_release(MODKEY, "h", function()
     cwc.spawn_with_shell("~/.config/cwc/scripts/cheatsheet.sh")
 end, { description = "show keybind cheatsheet", group = "launcher" })
 
-------------------- utility
 kbd.bind({ MODKEY }, "Print", function()
     cwc.spawn_with_shell('grim - | copyq write image/png - && copyq select 0')
 end, { description = "screenshot entire screen", group = "launcher" })
@@ -529,14 +494,9 @@ kbd.bind({ MODKEY }, "b", function()
     cwc.spawn_with_shell("kill -s USR1 `pgrep waybar`")
 end, { description = "toggle waybar", group = "launcher" })
 kbd.bind({ MODKEY }, "F6", function()
-    -- the script reloads cwc itself (via cwctl) after flipping state, so border
-    -- colors refresh for this and every other entry point uniformly.
     cwc.spawn_with_shell("~/.config/cwc/scripts/high-contrast.sh")
 end, { description = "toggle high contrast mode", group = "launcher" })
 
------------------- MEDIA KEY -----------------------
-
--- Screen brightness
 kbd.bind({}, "XF86MonBrightnessUp", function()
     cwc.spawn_with_shell("brightnessctl s 3%+")
 end, { exclusive = true, repeated = true })
@@ -550,16 +510,9 @@ local function toggle_mon()
         s.dpms = not s.dpms
     end
 end
--- there is 2 variant of XF86ScreenSaver and the xkb_state_key_get_syms only send one of the
--- key. The solution is that to use the keysym number as the "key" as specified in
--- xkbcommon-keysyms header.
---
--- just to make sure both will use keysym
 kbd.bind({}, 0x1008ff2d, toggle_mon)
 kbd.bind({}, 0x10081245, toggle_mon)
--- kbd.bind({}, "XF86ScreenSaver", toggle_mon)
 
------------- Audio Media Keys
 kbd.bind({}, "XF86AudioLowerVolume", function()
     local cmd = string.format("pactl set-sink-volume @DEFAULT_SINK@ %s%%", "-3")
     cwc.spawn_with_shell(cmd)
@@ -575,7 +528,6 @@ kbd.bind({}, "XF86AudioMicMute", function()
     cwc.spawn_with_shell("pactl set-source-mute @DEFAULT_SOURCE@ toggle")
 end, { exclusive = true })
 
--------------- Media Player Keys
 kbd.bind({}, "XF86AudioPlay", function()
     cwc.spawn_with_shell("playerctl play-pause")
 end, { exclusive = true })
@@ -595,8 +547,6 @@ kbd.bind({}, "XF86AudioForward", function()
     cwc.spawn_with_shell("playerctl position 5+")
 end, { exclusive = true })
 
-
------------- Other Extra Keys
 kbd.bind({}, "XF86TouchpadToggle", function()
     local devs = cwc.input.get()
 
@@ -619,38 +569,30 @@ end)
 kbd.bind({}, "XF86Tools", function()
     cwc.spawn_with_shell("quodlibet --run")
 end)
-kbd.bind({}, "XF86HomePage", function() --
+kbd.bind({}, "XF86HomePage", function()
     cwc.spawn { "xdg-open", "https://google.com/" }
 end)
-kbd.bind({}, "XF86RFKill", function() --
-    -- TODO: toggle wireless
+kbd.bind({}, "XF86RFKill", function()
 end)
 
----------------- PLUGINS -------------------
-
-kbd.bind({ mod.ALT }, "Tab", function() --
+kbd.bind({ mod.ALT }, "Tab", function()
     if not cwc.cwcle then return end
 
     cwc.cwcle.next(mod.ALT)
 end, { description = "cycle next client", group = "client", repeated = true })
-kbd.bind({ mod.ALT, mod.SHIFT }, "Tab", function() --
+kbd.bind({ mod.ALT, mod.SHIFT }, "Tab", function()
     if not cwc.cwcle then return end
 
     cwc.cwcle.prev(mod.ALT)
 end, { description = "cycle previous client", group = "client", repeated = true })
 
------------------------------ CLIENT MANAGEMENT SUBMAP ---------------------------------
-
--- Perform client management without holding the modkey
 local client_map = kbd.create_bindmap()
 client_map.active = false
 
--- enter this submap by pressing MOD + W in the default map
 kbd.bind({ MODKEY }, "w", function()
     client_map:active_only()
 end, { description = "activate client vim movement keymap", group = "keymap" })
 
--- exit this submap by pressing Esc
 client_map:bind({}, "Escape", function()
     client_map.active = false
 end)
@@ -665,8 +607,7 @@ client_map:bind({ mod.SHIFT }, "j", resize_down, resize_down_opt)
 client_map:bind({ mod.SHIFT }, "k", resize_up, resize_up_opt)
 client_map:bind({ mod.SHIFT }, "l", resize_right, resize_right_opt)
 
--------------------- DEV ------------------------
-kbd.bind({ MODKEY }, "F11", function() --
+kbd.bind({ MODKEY }, "F11", function()
     cwc.create_output(2)
     print(#cwc.screen.get())
 end, { description = "Create output", group = "dev" })

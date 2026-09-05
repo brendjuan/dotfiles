@@ -1,141 +1,131 @@
 # dotfiles
 
-> ⚠️ **NOTICE:** This repository is heavily generated from **water intelligence**. Every
-> config in here was distilled, condensed, and precipitated out of a supersaturated
-> reasoning medium - we do not write dotfiles, we *irrigate* them. Hydrological review
-> is ongoing. Do not run `stow` while dehydrated. **The future is wet.** 💧
-
-Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
+Linux desktop configuration managed with [GNU Stow](https://www.gnu.org/software/stow/).
+Every top-level directory is a Stow package. Stow links the files inside it into `$HOME`.
 
 ![Tiling layout with VS Code, neofetch, and btop](screenshots/tiling.png)
 
 <p align="center">
-  <img src="screenshots/desktop.png" width="49%" alt="Desktop with cmatrix" />
-  <img src="screenshots/lockscreen.png" width="49%" alt="Lockscreen" />
+  <img src="screenshots/desktop.png" width="49%" alt="Desktop" />
+  <img src="screenshots/lockscreen.png" width="49%" alt="Lock screen" />
 </p>
-
-## Packages
-
-| Package    | What it configures              |
-|------------|---------------------------------|
-| `zsh`      | `.zshrc`, `.zshenv` (Oh My Zsh) |
-| `bash`     | `.bashrc`                       |
-| `git`      | `.gitconfig`, `.config/git/ignore` (git-lfs, conditional personal identity) |
-| `kitty`    | Kitty terminal                  |
-| `mako`     | Mako notification daemon        |
-| `swaylock` | Swaylock screen locker          |
-| `cwc`      | CWC window compositor           |
-| `k4`       | `k4` script — launch kitty in a 2x2 grid |
-| `mx`       | `mx` script — battery and DPI of a Logitech mouse over HID++ |
-| `claude`   | Claude Code skills (`.claude/skills/`) — only skills, no creds/state |
-| `apps`     | Desktop entries (`.local/share/applications/`) so AppImages show up in rofi |
-| `awesome`  | **Legacy.** Awesome WM (overlay on [awesome-copycats](https://github.com/lcpz/awesome-copycats)) |
-
-> **Legacy:** `awesome/` is kept around for X11 fallback but is no longer the primary
-> WM — `cwc` is. The install script prompts before setting it up; skip it on new
-> machines. It clones awesome-copycats and overlays customized `rc.lua` and
-> `theme.lua` on top.
 
 ## Install
 
 ```bash
 git clone <repo-url> ~/Personal/dotfiles
 cd ~/Personal/dotfiles
-cp config.env.example config.env   # fill in your values
+cp config.env.example config.env
+"$EDITOR" config.env
 ./install.sh
 ```
 
-## Config
+`install.sh` does this, in order:
 
-`config.env` holds values that get substituted into templates before stowing.
-Copy the example and edit it before running install:
+1. Copies every file it would replace to `backups/<timestamp>/`.
+2. Links each package listed in `packages.sh` into `$HOME`.
+3. Fills the `{{PLACEHOLDER}}` values in the git config from `config.env`.
+4. Writes `~/.config/dotfiles/env.sh`. The shells source it to set `CYCLONEDDS_URI` from the ROS workspace.
+5. Asks whether to install the legacy Awesome WM package.
+
+`restore.sh` unlinks the packages and copies a backup back into `$HOME`.
+
+To link or unlink a single package:
 
 ```bash
-cp config.env.example config.env
+stow -t ~ kitty
+stow -D -t ~ kitty
 ```
 
-Available variables:
+## config.env
 
-| Variable | Used in | Description |
+This file is not tracked.
+
+| Variable | Used by | Meaning |
 |---|---|---|
-| `WORK_GIT_NAME` | `.gitconfig` | Default git author name |
-| `WORK_GIT_EMAIL` | `.gitconfig` | Default git author email |
-| `PERSONAL_GIT_NAME` | `.gitconfig-personal` | Git identity for `~/Personal/` repos |
-| `PERSONAL_GIT_EMAIL` | `.gitconfig-personal` | Git email for `~/Personal/` repos |
-| `ROS_WORKSPACE` | `~/.config/dotfiles/env.sh` | ROS workspace whose nix dev shell owns the CycloneDDS config (`CYCLONEDDS_URI`) |
+| `WORK_GIT_NAME`, `WORK_GIT_EMAIL` | `~/.gitconfig` | Default git identity |
+| `PERSONAL_GIT_NAME`, `PERSONAL_GIT_EMAIL` | `~/.gitconfig-personal` | Git identity for repositories under `~/Personal/` |
+| `ROS_WORKSPACE` | `~/.config/dotfiles/env.sh` | ROS workspace whose nix dev shell provides the CycloneDDS config |
 
-## Conditional tool setup
+## Packages
 
-The shell configs (`zsh`, `bash`) conditionally activate tools only if they are installed:
+| Package | What it holds |
+|---|---|
+| `zsh`, `bash` | Shell setup. depot, mise, and pnpm are enabled only when they are installed. |
+| `git` | Git config with git-lfs and a second identity for `~/Personal/` |
+| `kitty` | Terminal. `current-theme.conf` is a local file that the high-contrast toggle rewrites. |
+| `tmux` | Terminal features for tmux inside kitty |
+| `mako` | Notification daemon |
+| `swaylock` | Screen locker. `scripts/gen_lockscreen.py` draws the background image. |
+| `cwc` | The cwc Wayland compositor: Lua config, waybar, rofi menus, helper scripts. See [cwc](#cwc). |
+| `vscode` | VS Code user settings |
+| `k4` | `k4 [dir]` opens kitty with four windows in a 2x2 grid |
+| `mx` | `mx` reads the battery and sets the DPI of a Logitech mouse. See [mx](#mx). |
+| `claude` | Claude Code skills. No credentials or state. |
+| `apps` | Desktop entries for AppImage apps so rofi can start them. See [apps](#apps). |
+| `awesome` | Legacy X11 window manager config. See [awesome](#awesome). |
 
-- **[depot](https://depot.dev)** — `~/.depot/bin/`
-- **[mise](https://mise.jdx.dev)** — `~/.local/bin/mise`
-- **[pnpm](https://pnpm.io)** — `~/.local/share/pnpm/`
+`scripts/` holds tools that are not stowed:
 
-## Logitech mouse
+- `gen_lockscreen.py` and `glitch-wallpaper.sh` generate the lock screen and wallpaper images. They need Pillow and ImageMagick.
+- `gps-fix.py` and `heading_cli.py` are ROS 2 terminal tools that show the vehicle's GPS fix and heading.
+- `share-internet.sh` turns this machine into a NAT gateway for another network. Run it with `--help`.
 
-The `mx` package installs a small Python script (`~/.local/bin/mx`) that talks
-HID++ to a Logitech mouse over its `/dev/hidraw` node. It needs no extra
-packages. It works for a mouse connected over Bluetooth or a USB cable, not
-through a Unifying/Bolt receiver.
+## cwc
 
-```bash
-mx setup       # once: installs a udev rule so sudo is not needed (asks for sudo)
-mx battery     # 80%  discharging
-mx dpi         # 1000 dpi  (default 1000; allowed: 200-8000 in steps of 50)
-mx dpi 1600    # set the DPI
-mx info        # device, HID++ version, battery and DPI
-mx devices     # list the Logitech devices, with the chosen one marked "*"
-```
+Key bindings live in `cwc/.config/cwc/keybind.lua`. `MOD+H` lists them in rofi.
+`MOD+CTRL+R` reloads the compositor config. `MOD+C` opens a menu of custom commands.
 
-A Logitech keyboard is also a Logitech HID device, so `mx` scores every device
-it finds and uses the best one: the kernel binds the HID++ driver to it, its
-report descriptor declares the HID++ long report, it reports a HID++ battery,
-and it moves the pointer. To choose the device by hand:
+### High-contrast mode
 
-```bash
-mx --device "MX Master" battery    # part of the device name
-mx --device /dev/hidraw8 battery   # a node, as printed by `mx devices`
-export MX_DEVICE="MX Master"       # same for every call
-```
+`MOD+F6`, the waybar button, and the `MOD+C` menu all run `scripts/high-contrast.sh`.
+The mode is on while `~/.cache/high-contrast-mode` exists.
+The script switches kitty, mako, waybar, rofi, VS Code, btop, the wallpaper, and the system color scheme.
+It does not edit files tracked in this repo, except the VS Code settings.
 
-The waybar module `custom/mouse` (cwc package) shows the mouse battery, greyed
-out when the mouse is not connected. Left click picks a DPI in rofi, right
-click opens a terminal with `mx info`. It needs the `mx` package. It reads the
-battery from sysfs and skips batteries whose device does not move the pointer,
-so a Logitech keyboard battery never shows up there.
+### Waybar modules that need setup
 
-## AppImage apps
+- `custom/mouse` needs the `mx` package and one run of `mx setup`.
+- `custom/claude-usage` reads the Claude Code token from `~/.claude/.credentials.json`.
+- `custom/ccm-battery` and `custom/zenoh` talk to a vehicle on the local network. `custom/zenoh` runs the `zenoh:operator` task from the deployment repository under `~/Workspace/`.
+- `custom/package` shows FedEx tracking. It is defined but not in the bar by default. To use it, add it to `modules-right` in `waybar/config.jsonc`, copy `packages.json.example` to `~/.config/cwc/packages.json`, and fill in the FedEx API credentials. Get them at developer.fedex.com: create a project, enable the Track API, and copy the production key and secret. A package entry may have a `url` field that replaces the page opened on click. The chip is hidden while the package list is empty.
 
-The `apps` package ships rofi launcher entries (GHOST, FinOps) but **not** the
-AppImage binaries or their icons — those are large and machine-local, so they
-stay out of the repo. Each `.desktop` file launches a *versionless symlink*
-(e.g. `~/Applications/FinOps.AppImage`), so the repo never encodes a version
-number. On a new machine, after `stow apps`:
+## mx
+
+`mx` talks HID++ to a Logitech mouse through its `/dev/hidraw` node.
+It works over Bluetooth or a USB cable, but not through a Unifying or Bolt receiver. It needs only Python 3.
+
+| Command | Effect |
+|---|---|
+| `mx setup` | Installs a udev rule so the other commands work without sudo. Run once. |
+| `mx battery` | Charge level and charging state |
+| `mx dpi` | Current DPI and the allowed values |
+| `mx dpi 1600` | Set the DPI |
+| `mx info` | Device, HID++ version, battery, and DPI |
+| `mx devices` | List Logitech devices. `*` marks the one in use. |
+
+When several Logitech devices are connected, `mx` picks the one that looks most like a mouse.
+To choose by hand, pass `--device` with part of the device name or a `/dev/hidraw` node, or set `MX_DEVICE`.
+
+## apps
+
+The desktop entries start `~/Applications/FinOps.AppImage` and `~/Applications/GHOST.AppImage`.
+Both are symlinks to the real, versioned files, which are not in the repo. On a new machine:
 
 ```bash
 mkdir -p ~/Applications
 mv ~/Downloads/FinOps-*.AppImage ~/Downloads/GHOST_*.AppImage ~/Applications/
 chmod +x ~/Applications/*.AppImage
-
-# Point the versionless names the .desktop files expect at the real files
-# (adjust the version in the target to match what you downloaded)
-ln -sfn FinOps-2.6.1.AppImage      ~/Applications/FinOps.AppImage
+ln -sfn FinOps-2.6.1.AppImage ~/Applications/FinOps.AppImage
 ln -sfn GHOST_11.2.0_amd64.AppImage ~/Applications/GHOST.AppImage
 ```
 
-Icons are optional — the entries reference `~/.local/share/icons/{finops,ghost}.png`;
-without them rofi just shows a blank icon. Extract with
-`~/Applications/GHOST.AppImage --appimage-extract '*.png'` if you want them.
+Use the file names you downloaded in the `ln` commands.
+To update an app, replace the AppImage and point the symlink at the new file.
+Icons are optional. The entries look for `~/.local/share/icons/finops.png` and `ghost.png`.
 
-**Version bumps:** drop the new AppImage in `~/Applications/` and repoint the
-symlink (`ln -sfn <new-file> ~/Applications/FinOps.AppImage`). In-app self-updates
-that overwrite the file in place need nothing — the runtime resolves the symlink
-to the real target. No repo change either way.
+## awesome
 
-## Stow individual packages
-
-```bash
-stow -t ~ kitty    # symlink just kitty
-stow -D -t ~ kitty # unlink kitty
-```
+Legacy X11 setup, kept as a fallback. `install.sh` asks before installing it.
+It clones [awesome-copycats](https://github.com/lcpz/awesome-copycats) into `~/.config/awesome` and links this repo's `rc.lua` and `theme.lua` on top.
+Skip it on new machines.

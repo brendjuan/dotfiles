@@ -10,7 +10,6 @@ if [ ! -d "$BACKUP_BASE" ] || [ -z "$(ls -A "$BACKUP_BASE" 2>/dev/null)" ]; then
     exit 1
 fi
 
-# List available backups
 echo "Available backups:"
 echo ""
 backups=()
@@ -41,7 +40,6 @@ echo ""
 echo "Restoring from: $(basename "$BACKUP_DIR")"
 echo ""
 
-# Unstow packages first to remove symlinks
 if command -v stow &>/dev/null; then
     for pkg in "${PACKAGES[@]}"; do
         if [ -d "$DOTFILES_DIR/$pkg" ]; then
@@ -50,7 +48,6 @@ if command -v stow &>/dev/null; then
     done
 fi
 
-# Restore each backed-up file
 restored=0
 while IFS= read -r backed_file; do
     rel_path="${backed_file#"$BACKUP_DIR"/}"
@@ -59,7 +56,6 @@ while IFS= read -r backed_file; do
 
     mkdir -p "$target_dir"
 
-    # Remove symlink if present so we can replace it with the real file
     if [ -L "$target" ]; then
         rm "$target"
     fi

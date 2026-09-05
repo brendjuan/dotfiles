@@ -1,31 +1,3 @@
-#!/usr/bin/env python3
-"""mx: read the battery and set the DPI of a Logitech mouse over HID++ 2.0.
-
-Talks to the mouse directly through its /dev/hidraw node. Works for mice
-connected over Bluetooth or a USB cable, not through a Unifying/Bolt receiver.
-No extra packages are needed.
-
-    mx battery         show the charge level and charging state
-    mx dpi             show the current DPI and the allowed values
-    mx dpi 1600        set the DPI
-    mx info            device, protocol version, battery and DPI
-    mx devices         list the Logitech HID devices found
-    mx setup           install a udev rule so sudo is not needed (asks for sudo once)
-
-Picking the device: a Logitech keyboard is also a Logitech HID device, so the
-commands score every device found and use the best one: the kernel binds the
-HID++ driver to it, its report descriptor declares the HID++ long report, it
-has a HID++ battery, and it moves the pointer. To choose by hand, pass
---device with a /dev/hidraw node or a part of the device name, or set
-MX_DEVICE to the same thing. `mx devices` marks the device that would be used.
-
-Protocol: every message is a 20 byte "long" HID report:
-    [0x11, device index, feature index, function << 4 | software id, params...]
-The device answers with the same first four bytes followed by the result.
-Features used: 0x0000 root (look up other features), 0x1004 unified battery,
-0x1000 battery level status (older devices), 0x2201 adjustable DPI.
-"""
-
 import argparse
 import glob
 import os
@@ -35,18 +7,14 @@ import sys
 import time
 
 VENDOR_LOGITECH = 0x046D
-REPORT_LONG = 0x11         # 20 byte report; Bluetooth devices only accept this one
+REPORT_LONG = 0x11
 REPORT_LEN = 20
-DEVICE_INDEX = 0xFF        # "this device", used when not going through a receiver
-SW_ID = 0x0A               # marks our requests; replies carry it back (1..15)
+DEVICE_INDEX = 0xFF
+SW_ID = 0x0A
 REPLY_TIMEOUT_S = 3.0
-ENV_DEVICE = "MX_DEVICE"   # set it to a /dev/hidraw node or part of a device name
+ENV_DEVICE = "MX_DEVICE"
 
-# REL_X | REL_Y in the kernel's input capability bitmap: what a pointer reports.
 POINTER_REL_BITS = 0x3
-# HID++ lives on a vendor usage page and uses report id 0x11 for long reports.
-# Seeing both in the report descriptor means the device speaks HID++, even when
-# the hidpp kernel driver is not bound to it.
 HIDPP_USAGE_PAGES = (b"\x06\x43\xff", b"\x06\x00\xff")
 HIDPP_LONG_REPORT_ID = b"\x85\x11"
 
@@ -63,25 +31,17 @@ HIDPP_ERRORS = {
 
 UDEV_RULE_PATH = "/etc/udev/rules.d/70-mx-hidraw.rules"
 UDEV_RULE = """\
-# Installed by `mx setup` (dotfiles). Let the logged-in user open the raw HID
-# node of Logitech HID++ devices, so `mx` can read the battery and set the DPI.
-# 0005 = Bluetooth, 0003 = USB. The file name must sort before
-# 73-seat-late.rules, otherwise the uaccess tag has no effect.
+# Installed by `mx setup` from the dotfiles repo.
 SUBSYSTEM=="hidraw", KERNELS=="0005:046D:*", TAG+="uaccess"
 SUBSYSTEM=="hidraw", KERNELS=="0003:046D:*", TAG+="uaccess"
 """
 
 
 class MxError(Exception):
-    """Any error we want to show to the user as one line."""
+    pass
 
-
-# --------------------------------------------------------------------------- #
-# device discovery
-# --------------------------------------------------------------------------- #
 
 def read_uevent(path):
-    """Parse a sysfs uevent file into a dict."""
     info = {}
     with open(path) as f:
         for line in f:
@@ -91,11 +51,9 @@ def read_uevent(path):
 
 
 def is_pointer(device_dir):
-    """True if an input device below device_dir moves the pointer."""
     for path in glob.glob(os.path.join(device_dir, "input/input*/capabilities/rel")):
         try:
             with open(path) as f:
-                # the bitmap is printed as space separated hex words, low word last
                 bits = int(f.read().strip().split()[-1], 16)
         except (OSError, ValueError, IndexError):
             continue
@@ -105,7 +63,6 @@ def is_pointer(device_dir):
 
 
 def speaks_hidpp(device_dir):
-    """True if the HID report descriptor declares the HID++ long report."""
     try:
         with open(os.path.join(device_dir, "report_descriptor"), "rb") as f:
             descriptor = f.read()
@@ -116,21 +73,14 @@ def speaks_hidpp(device_dir):
 
 
 def device_score(hidpp, battery, pointer):
-    """How much this device looks like the mouse we want to talk to."""
     return 4 * bool(hidpp) + 2 * bool(battery) + 2 * bool(pointer)
 
 
 def find_devices():
-    """Return one dict per Logitech HID device that has a hidraw node.
-
-    Keys: node, name, driver, key (equal for every node of one physical
-    device), hidpp, battery, pointer, score.
-    """
     found = []
     for uevent in glob.glob("/sys/class/hidraw/hidraw*/device/uevent"):
-        node = uevent.split("/")[4]                 # hidraw3
+        node = uevent.split("/")[4]
         info = read_uevent(uevent)
-        # HID_ID looks like 0005:0000046D:0000B034 (bus:vendor:product)
         parts = info.get("HID_ID", "").split(":")
         if len(parts) != 3 or int(parts[1], 16) != VENDOR_LOGITECH:
             continue
@@ -145,22 +95,17 @@ def find_devices():
             "node": "/dev/" + node,
             "name": info.get("HID_NAME", "?"),
             "driver": driver,
-            # One USB device shows up as several hidraw nodes, one per
-            # interface. They share the serial, and the physical path without
-            # the trailing "/inputN", so either one groups them together.
             "key": uniq or phys.rsplit("/input", 1)[0] or node,
             "hidpp": hidpp,
             "battery": battery,
             "pointer": pointer,
             "score": device_score(hidpp, battery, pointer),
         })
-    # hidraw2 must sort before hidraw10, so sort on the number
     found.sort(key=lambda dev: int(dev["node"][len("/dev/hidraw"):] or 0))
     return found
 
 
 def one_per_device(devices):
-    """Keep the best hidraw node of each physical device."""
     best = {}
     for dev in devices:
         if dev["key"] not in best or dev["score"] > best[dev["key"]]["score"]:
@@ -173,7 +118,6 @@ def describe(dev):
 
 
 def match_by_name(devices, wanted):
-    """Resolve a --device / MX_DEVICE name fragment to one hidraw node."""
     matches = one_per_device(
         [dev for dev in devices if wanted.lower() in dev["name"].lower()])
     if not matches:
@@ -186,11 +130,9 @@ def match_by_name(devices, wanted):
 
 
 def pick_device(requested=None):
-    """Return the hidraw node to talk to."""
     requested = requested or os.environ.get(ENV_DEVICE, "")
     if requested.startswith("/"):
         return requested
-    # a bare node name, as printed by `mx devices` without the directory
     if requested.startswith("hidraw") and requested[len("hidraw"):].isdigit():
         return "/dev/" + requested
 
@@ -225,18 +167,12 @@ def open_device(path):
         raise MxError(f"{path} does not exist")
 
 
-# --------------------------------------------------------------------------- #
-# HID++ transport
-# --------------------------------------------------------------------------- #
-
 def request(fd, feature_index, function, params=b""):
-    """Send one HID++ 2.0 request and return the reply parameters (16 bytes)."""
     header = bytes([REPORT_LONG, DEVICE_INDEX, feature_index, (function << 4) | SW_ID])
     message = (header + params).ljust(REPORT_LEN, b"\0")
     if len(message) != REPORT_LEN:
         raise MxError("request too long")
 
-    # drop replies or notifications that are still queued from before
     while select.select([fd], [], [], 0)[0]:
         os.read(fd, 64)
 
@@ -251,11 +187,9 @@ def request(fd, feature_index, function, params=b""):
         data = os.read(fd, 64)
         if len(data) < 6 or data[0] not in (0x10, 0x11) or data[1] != DEVICE_INDEX:
             continue
-        # HID++ 2.0 error reply: [.., 0xFF, feature index, function|swid, error code]
         if data[2] == 0xFF and data[3] == feature_index and data[4] == header[3]:
             code = data[5]
             raise MxError(f"the mouse rejected the request: {HIDPP_ERRORS.get(code, code)}")
-        # HID++ 1.0 error reply (receivers and very old devices)
         if data[2] == 0x8F:
             raise MxError("this device does not speak HID++ 2.0")
         if data[2] == feature_index and data[3] == header[3]:
@@ -263,7 +197,6 @@ def request(fd, feature_index, function, params=b""):
 
 
 def feature_index(fd, feature_id):
-    """Ask the root feature where feature_id lives. 0 means not supported."""
     reply = request(fd, FEATURE_ROOT, 0, feature_id.to_bytes(2, "big"))
     return reply[0]
 
@@ -273,28 +206,22 @@ def protocol_version(fd):
     return f"{reply[0]}.{reply[1]}"
 
 
-# --------------------------------------------------------------------------- #
-# battery
-# --------------------------------------------------------------------------- #
-
 def read_battery(fd):
-    """Return (percent or None, state text)."""
     index = feature_index(fd, FEATURE_BATTERY_UNIFIED)
     if index:
-        reply = request(fd, index, 1)               # getStatus
+        reply = request(fd, index, 1)
         percent, level_flags, charging = reply[0], reply[1], reply[2]
         states = {0: "discharging", 1: "charging", 2: "charging slowly",
                   3: "full", 4: "charging error"}
         state = states.get(charging, f"state {charging}")
         if percent == 0 and level_flags:
-            # device reports only a coarse level, not a percentage
             levels = {1: "critical", 2: "low", 4: "good", 8: "full"}
             return None, f"{levels.get(level_flags, 'unknown level')}, {state}"
         return percent, state
 
     index = feature_index(fd, FEATURE_BATTERY_STATUS)
     if index:
-        reply = request(fd, index, 0)               # getBatteryLevelStatus
+        reply = request(fd, index, 0)
         states = {0: "discharging", 1: "charging", 2: "almost full", 3: "full",
                   4: "charging slowly", 5: "invalid battery", 6: "thermal error",
                   7: "charging error"}
@@ -307,18 +234,7 @@ def format_battery(percent, state):
     return f"{percent}%  {state}" if percent is not None else state
 
 
-# --------------------------------------------------------------------------- #
-# DPI
-# --------------------------------------------------------------------------- #
-
 def parse_dpi_list(values):
-    """Decode getSensorDpiList values into (ranges, singles).
-
-    values is a list of 16 bit numbers, ended by the first 0. A value of
-    0xE000 + n is a step marker between its two neighbours: 200, 0xE032, 8000
-    means every DPI from 200 to 8000 in steps of 50. Other values are single
-    allowed DPIs. ranges is [(low, high, step)], singles is [dpi].
-    """
     ranges, singles = [], []
     i = 0
     while i < len(values) and values[i]:
@@ -338,7 +254,7 @@ def parse_dpi_list(values):
 
 def dpi_allowed(dpi, ranges, singles):
     if not ranges and not singles:
-        return True  # list not understood; let the mouse decide
+        return True
     if dpi in singles:
         return True
     return any(low <= dpi <= high and (dpi - low) % step == 0
@@ -359,24 +275,19 @@ def dpi_feature(fd):
 
 
 def read_dpi(fd, index, sensor=0):
-    """Return (current dpi, default dpi)."""
-    reply = request(fd, index, 2, bytes([sensor]))  # getSensorDpi
+    reply = request(fd, index, 2, bytes([sensor]))
     return int.from_bytes(reply[1:3], "big"), int.from_bytes(reply[3:5], "big")
 
 
 def read_dpi_list(fd, index, sensor=0):
-    reply = request(fd, index, 1, bytes([sensor]))  # getSensorDpiList
+    reply = request(fd, index, 1, bytes([sensor]))
     values = [int.from_bytes(reply[i:i + 2], "big") for i in range(1, 15, 2)]
     return parse_dpi_list(values)
 
 
 def write_dpi(fd, index, dpi, sensor=0):
-    request(fd, index, 3, bytes([sensor]) + dpi.to_bytes(2, "big"))  # setSensorDpi
+    request(fd, index, 3, bytes([sensor]) + dpi.to_bytes(2, "big"))
 
-
-# --------------------------------------------------------------------------- #
-# commands
-# --------------------------------------------------------------------------- #
 
 def cmd_devices(args):
     devices = find_devices()
