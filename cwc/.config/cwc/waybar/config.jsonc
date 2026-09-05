@@ -1,7 +1,4 @@
 {
-    // WAYBAR 9000 - the bar that haunts your desktop
-    // "it's not a bug, it's a feature" - every dev ever
-
     "layer": "top",
     "position": "top",
     "height": 16,
@@ -15,35 +12,18 @@
     },
 
     "custom/zenoh": {
-        // start/stop the zenoh operator bridge in ~/Workspace/deployment. the
-        // button only runs the deployment repo's own zenoh:operator task.
-        // "status" is read-only — it looks for the local bridge process and
-        // nothing else, so polling it never puts anything on the wire (the
-        // laptop stays off dds and zenoh until you press the button).
-        // left click toggles, right click opens the log.
         "exec": "~/.config/cwc/scripts/zenoh-operator.sh status",
         "return-type": "json",
         "interval": 3,
-        // the script raises this signal after a toggle so the icon flips at
-        // once instead of waiting for the next poll. keep both in sync.
         "signal": 8,
         "on-click": "~/.config/cwc/scripts/zenoh-operator.sh",
-        // "logwin" owns the terminal flags and closes an already open log
-        // window first, so pressing this again replaces it instead of stacking.
         "on-click-right": "~/.config/cwc/scripts/zenoh-operator.sh logwin"
     },
 
     "custom/mouse": {
-        // logitech mouse (mx master 3s over bluetooth). the battery comes from
-        // the kernel's hidpp driver in sysfs, so polling needs no device access
-        // and never wakes the mouse. left click picks a dpi in rofi, right
-        // click opens a float terminal with `mx info`. both use ~/.local/bin/mx
-        // (stow package "mx"; run `mx setup` once for the permissions).
         "exec": "~/.config/cwc/scripts/mx-mouse.sh status",
         "return-type": "json",
         "interval": 10,
-        // the script raises this signal after a dpi change so the tooltip
-        // updates at once. keep both in sync.
         "signal": 9,
         "on-click": "~/.config/cwc/scripts/mx-mouse.sh pick",
         "on-click-right": "~/.config/cwc/scripts/mx-mouse.sh details"
@@ -85,12 +65,6 @@
     },
 
     "custom/ccm-battery": {
-        // pack volts + amps for /ccm/battery, read over the vehicle's foxglove
-        // bridge websocket (subscribe-only — the laptop must never join dds or
-        // zenoh, see the script docstring). continuous module: the script stays
-        // alive and sets its own cadence (1s live, 30s while the bridge or topic
-        // is dead), so there is no "interval" here on purpose. restart-interval
-        // only covers the script exiting — e.g. python websockets missing.
         "exec": "~/.config/cwc/scripts/ccm-battery.py",
         "return-type": "json",
         "restart-interval": 30,

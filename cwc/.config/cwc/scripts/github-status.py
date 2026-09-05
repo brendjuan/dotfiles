@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-github-status.py — github.com health check for waybar.
-hits the statuspage json api. green = all clear, yellow = something's wobbly,
-red = real outage (or we can't reach the api at all).
-"""
 import json
 import os
 import sys
@@ -12,11 +6,10 @@ import urllib.request
 
 URL = "https://www.githubstatus.com/api/v2/summary.json"
 CACHE = os.path.expanduser("~/.cache/github-status.json")
-TTL = 120  # gh status moves quickly during incidents
+TTL = 120
 
-ICON = "󰊤"  # nf-md-github — matches MD-family metrics of rowing chip
+ICON = "󰊤"
 
-# statuspage indicator → our 3-color world
 INDICATOR_CLASS = {
     "none": "green",
     "minor": "yellow",
@@ -38,7 +31,6 @@ def parse(payload):
     for c in payload.get("components", []) or []:
         status = c.get("status")
         if status and status != "operational":
-            # skip group containers — they aggregate child statuses and double-report
             if c.get("group"):
                 continue
             bad.append({"name": c.get("name", "?"), "status": status})
@@ -97,7 +89,6 @@ def main():
         save_cache(data)
         emit(data)
     except Exception:
-        # treat unreachable api as red — if we can't ask, assume something's wrong
         if cached:
             emit(cached, stale=True)
         else:

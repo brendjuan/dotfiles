@@ -9,18 +9,17 @@ export const meta = {
 }
 
 const ARGS = (typeof args === 'string') ? JSON.parse(args) : (args || {})
-const MODE = ARGS.mode || 'learn' // 'learn' | 'audit'
-const VAULT = ARGS.vaultPath || '' // resolved by the skill (env var or default)
-const REPO = ARGS.repo || 'repo' // basename of the repo root — the per-repo vault folder
-const SHA = ARGS.sha || '' // short HEAD sha, stamped onto repo notes for staleness tracking
-const MODEL = ARGS.model || undefined // worker model for the mining/index/audit agents; omit to inherit the session model
+const MODE = ARGS.mode || 'learn'
+const VAULT = ARGS.vaultPath || ''
+const REPO = ARGS.repo || 'repo'
+const SHA = ARGS.sha || ''
+const MODEL = ARGS.model || undefined
 
 if (!VAULT) throw new Error('convention-learn: requires args.vaultPath')
 
 const REPO_DIR = `${VAULT}/${REPO}`
 const ROS_DIR = `${VAULT}/ros2-standards`
 
-// NOTE: dimension keys are the shared contract with convention-review (they name the vault folders). Keep them in sync.
 const DIMENSIONS = [
   {
     key: 'package-metadata',
@@ -153,7 +152,6 @@ For each note:
 Return counts: notes checked, notes with rotted evidence, notes you marked stale, plus a short details list.`
 }
 
-// ============================ AUDIT ============================
 if (MODE === 'audit') {
   log(`AUDIT → ${REPO_DIR}`)
   phase('Audit')
@@ -174,7 +172,6 @@ if (MODE === 'audit') {
   }
 }
 
-// ============================ LEARN (default) ============================
 log(`LEARN → vault ${REPO_DIR} (+ ${ROS_DIR}) @ ${SHA || 'no-sha'}`)
 phase('Learn')
 const results = (await parallel(

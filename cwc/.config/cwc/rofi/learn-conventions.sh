@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# open a float-term kitty in ~/Workspace/<name> and sic claude code on the
-# convention-learn skill (default `learn` mode) — mines the repo's conventions
-# into the vault, one rule per note. meant to run in a watchable floating window
-# so you can eyeball the carnage. glitchcore-adjacent.
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 WORKSPACE_DIR=$("$SCRIPT_DIR/find-workspace-dir.sh") || {
     notify-send "learn-conventions" "No ~/Workspace(s) directory found"; exit 1;

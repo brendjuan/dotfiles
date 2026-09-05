@@ -1,25 +1,3 @@
-#!/usr/bin/env python3
-"""Print the sub's current heading from one of several ENU yaw sources.
-
-Sources (all ENU, CCW from East):
-    euler     /ins/sbg/ekf_euler          SBG EKF Euler angles            [default]
-    ins-odom  /ins/imu/odometry           SBG EKF attitude (Odometry)
-    global    /odometry/global            robot_localization global EKF
-    local     /odometry/local             robot_localization local EKF
-    topic:<T> any nav_msgs/Odometry topic at path T
-
-Converts ENU yaw to:
-    - ENU yaw   (CCW from East,  E=0)
-    - Compass   (CW  from North, N=0)  -- standard nav heading
-    - CW-East   (CW  from East,  E=0)  -- brendon's convention
-
-Usage:
-    heading_cli.py                          # stream from ekf_euler @ 2 Hz
-    heading_cli.py --once                   # single reading
-    heading_cli.py --source global --hz 10  # stream from /odometry/global
-    heading_cli.py --source topic:/foo/odom # any nav_msgs/Odometry topic
-"""
-
 import argparse
 import math
 import sys
@@ -75,7 +53,7 @@ def resolve_source(name: str) -> tuple[str, type]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser = argparse.ArgumentParser(description="Print the heading from one of several ENU yaw sources.")
     parser.add_argument(
         "--source",
         default="euler",

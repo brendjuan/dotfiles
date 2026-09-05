@@ -8,22 +8,12 @@ export const meta = {
   ],
 }
 
-// ---- scope injected by the caller via `args` ----
-//   args.scope   : human description of what is being reviewed
-//   args.range   : git diff range, e.g. "origin/main...HEAD" (or "" for none)
-//   args.changed : array of changed file paths (may be empty -> agents discover)
-// args may arrive as an object or a JSON-encoded string depending on the caller.
 const ARGS = (typeof args === 'string') ? JSON.parse(args) : (args || {})
 const SCOPE = ARGS.scope || 'the current changes'
 const RANGE = ARGS.range || ''
 const CHANGED = ARGS.changed || []
-// per-phase models: survey (reviewers) defaults to opus; verify (skeptics) and
-// distill to sonnet. Override via args.models, e.g. { survey: 'sonnet' };
-// pass null for a phase to fall back to the session model.
 const MODELS = { survey: 'opus', verify: 'sonnet', distill: 'sonnet', ...(ARGS.models || {}) }
 
-// Never go bare `git diff` (a clean tree would silently widen scope to a stale
-// local main). Default to origin/main so branch staleness can't inflate scope.
 const DIFF_CMD = RANGE ? `git diff ${RANGE}` : 'git diff origin/main...HEAD'
 if (!RANGE && !CHANGED.length) log('⚠️ no range or changed-file list supplied; defaulting to origin/main...HEAD')
 
@@ -56,7 +46,6 @@ const ALL_DIMENSIONS = [
   { key: 'frontend-ux',     focus: 'End-user usability of frontend/UI code (JS/TS, HTML/CSS, React/Vue/Svelte/etc.): accessibility (semantic markup, labels, keyboard & focus handling, ARIA, colour contrast), loading/error/empty states, form validation and feedback, responsive layout, avoiding layout shift/jank, and clear affordances. Flag states that leave the user stuck or confused. If the diff contains no frontend/UI code, return an empty findings array.' },
 ]
 
-// Optionally scale the finder fleet: pass args.dimensions (array of keys) to run a subset.
 const DIMENSIONS = Array.isArray(ARGS.dimensions) && ARGS.dimensions.length
   ? ALL_DIMENSIONS.filter(d => ARGS.dimensions.includes(d.key))
   : ALL_DIMENSIONS
@@ -86,7 +75,6 @@ const FINDING_SCHEMA = {
   },
 }
 
-// ---- Phase 1: survey ----
 phase('Survey')
 const surveys = await parallel(DIMENSIONS.map(d => () =>
   agent(
@@ -97,7 +85,6 @@ const surveys = await parallel(DIMENSIONS.map(d => () =>
   ).then(r => (r && r.findings ? r.findings : []).map(f => ({ ...f, dimension: d.key })))
 ))
 
-// flatten + dedupe by file:line:title
 const rawFindings = surveys.filter(Boolean).flat()
 const seen = new Set()
 const findings = []
@@ -125,7 +112,6 @@ if (findings.length === 0) {
   }
 }
 
-// ---- Phase 2: adversarial verification ----
 const VERDICT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -149,8 +135,6 @@ const VERDICT_SCHEMA = {
   },
 }
 
-// shard findings across 7..10 verifiers (fewer only if there are fewer findings).
-// args.verifiers overrides the target shard count for a lighter/heavier wave.
 const target = Number(ARGS.verifiers) > 0
   ? Math.floor(Number(ARGS.verifiers))
   : Math.min(10, Math.max(7, findings.length))
@@ -186,7 +170,6 @@ const confirmed = validated.filter(f => f.verdict === 'confirmed')
 const dropped = validated.filter(f => f.verdict !== 'confirmed')
 log(`Verify: ${confirmed.length} confirmed, ${validated.filter(f => f.verdict === 'false-positive').length} false-positive, ${validated.filter(f => f.verdict === 'uncertain').length} uncertain`)
 
-// ---- Phase 3: distill ----
 phase('Distill')
 const report = await agent(
   `You are the lead reviewer. Synthesize the verified findings into a polished Markdown review report for: ${SCOPE}.\n\n` +

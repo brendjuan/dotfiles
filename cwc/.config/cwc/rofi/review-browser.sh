@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# rofi front-end for ~/claude-reviews — the swarm writes, you scroll
-# rows: <branch>  kind · date  severity (color-coded by how cooked the branch is)
-# pick one → read it in glow / open in vscode / yeet path to clipboard
 
 REVIEW_DIR="$HOME/claude-reviews"
 [[ -d "$REVIEW_DIR" ]] || { notify-send "review-browser" "No $REVIEW_DIR directory"; exit 1; }
@@ -18,7 +15,6 @@ RED="#ff0050"
 AMBER="#ff5500"
 GHOST="#00ffb470"
 
-# newest first — mtime, not filename, because timestamp suffixes are inconsistent
 mapfile -t files < <(find "$REVIEW_DIR" -mindepth 2 -maxdepth 2 -name '*.md' -printf '%T@\t%p\n' | sort -rn | cut -f2)
 [[ ${#files[@]} -eq 0 ]] && notify-send "review-browser" "No reviews in $REVIEW_DIR" && exit 0
 
@@ -34,10 +30,8 @@ for f in "${files[@]}"; do
         nasa-*)              kind="nasa";  name="${base#nasa-}" ;;
         *)                   kind="misc";  name="$base" ;;
     esac
-    # shave trailing -YYYYMMDD[-HHMM] or bare -HHMM run stamps
     name=$(sed -E 's/-20[0-9]{6}(-[0-9]{4})?$//; s/-[0-9]{4}$//' <<<"$name")
 
-    # severity tally line formats drift between skills; the numbers don't
     tally_line=$(grep -m1 -i 'severity tally' "$f" 2>/dev/null)
     if [[ $tally_line =~ ([0-9]+)\ critical,\ ([0-9]+)\ high,\ ([0-9]+)\ medium,\ ([0-9]+)\ low ]]; then
         c=${BASH_REMATCH[1]} h=${BASH_REMATCH[2]} m=${BASH_REMATCH[3]} l=${BASH_REMATCH[4]}
@@ -59,7 +53,6 @@ for f in "${files[@]}"; do
         "$name" "$GHOST" "$kind" "$date" "$col" "${tally% }")$'\n'
 done
 
-# -format i → row index, so no markup-stripping gymnastics to recover the path
 idx=$(printf '%s' "$rows" | rofi -dmenu -p "reviews" -format i "${ROFI_OPTS[@]}")
 [[ -z "$idx" ]] && exit 0
 file="${files[$idx]}"
@@ -68,7 +61,6 @@ action=$(printf '%s\n' "󰈈 Read" "󰨞 Open in VSCode" "󰅍 Copy path" | \
     rofi -dmenu -p "$(basename "$file" .md)" "${ROFI_OPTS[@]}")
 case "$action" in
     "󰈈 Read")
-        # themed reader: void-black kitty + glitchcore glamour style, paged
         exec kitty --class float-term -o remember_window_size=no \
             -o initial_window_width=112c -o initial_window_height=44c \
             -o background='#020008' -o foreground='#b8ffe6' \

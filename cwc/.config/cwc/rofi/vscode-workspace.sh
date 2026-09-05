@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# pick a workspace dir and open vscode in it
 
 if [ -f "$HOME/.cache/high-contrast-mode" ]; then
     THEME="$HOME/.config/cwc/rofi/highcontrast.rasi"

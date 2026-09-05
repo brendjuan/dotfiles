@@ -1,6 +1,3 @@
-/* WAYBAR 9000 - high contrast sunlight mode */
-/* black on white, no transparency, maximum readability */
-
 * {
     font-family: "Hack Nerd Font", monospace;
     font-size: 10px;
@@ -56,26 +53,22 @@ window#waybar {
 }
 
 #custom-zenoh.off {
-    /* mid grey stays readable on white without looking active */
     color: #777777;
 }
 
 #custom-zenoh.on {
-    /* dark green on white — same green family as the other "good" states */
     color: #006622;
 }
 
 #custom-mouse {
     padding: 0 8px;
-    margin-left: 6px;  /* breathing room after the last tray icon */
+    margin-left: 6px;
     font-size: 12px;
     font-weight: bold;
-    /* dark green on white — same family as the other "good" states */
     color: #006622;
 }
 
 #custom-mouse.off {
-    /* mid grey stays readable on white without looking active */
     color: #777777;
 }
 
@@ -95,7 +88,7 @@ window#waybar {
 
 #custom-rivercast {
     padding: 0 6px;
-    margin: 2px 0 2px 4px;  /* flush against next chip (github) — match glitchcore */
+    margin: 2px 0 2px 4px;
     font-size: 12px;
     font-weight: bold;
     color: #ffffff;
@@ -118,8 +111,8 @@ window#waybar {
 }
 
 #custom-github {
-    padding: 0 7px 0 5px;  /* octocat sits ~1px right — nudge left, match glitchcore */
-    margin: 2px 0;  /* flush against neighbors on both sides */
+    padding: 0 7px 0 5px;
+    margin: 2px 0;
     font-size: 12px;
     font-weight: bold;
     color: #ffffff;
@@ -143,7 +136,7 @@ window#waybar {
 
 #custom-package {
     padding: 0 6px;
-    margin: 2px 0;  /* flush against neighbors on both sides */
+    margin: 2px 0;
     font-size: 12px;
     font-weight: bold;
     color: #ffffff;
@@ -166,7 +159,6 @@ window#waybar {
 }
 
 #custom-ccm-battery {
-    /* CCM pack telemetry off ros2 — same chip treatment as github */
     padding: 0 6px;
     margin: 2px 0;
     font-size: 12px;
@@ -196,14 +188,11 @@ window#waybar {
 }
 
 #custom-ccm-battery.down {
-    /* no comms to the pack — chip stays, lights go out (matches glitchcore) */
     background-color: #cccccc;
     color: #555555;
 }
 
 #custom-claude-usage {
-    /* claude session/weekly limit telemetry — same chip treatment as github.
-       (was missing here, so the chip lost its badge and vanished in sunlight mode) */
     padding: 0 8px 0 4px;
     margin: 2px 4px 2px 0;
     font-size: 12px;

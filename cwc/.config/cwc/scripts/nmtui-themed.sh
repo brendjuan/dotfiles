@@ -1,22 +1,6 @@
 #!/usr/bin/env bash
-# nmtui wrapper: pick a newt color palette that matches the desktop theme.
-#
-# nmtui (newt/slang) ignores the terminal palette for its widget colors and
-# reads $NEWT_COLORS ONCE at startup — it cannot be retheme'd live. So the
-# palette is chosen here, at launch, from the high-contrast state file (same
-# contract as high-contrast.sh). An nmtui that is already open keeps its old
-# colors; close and reopen it after a toggle.
-#
-# Color names resolve through the terminal's ANSI palette (kitty dark.conf /
-# highcontrast.conf); "default" is the terminal's default fg/bg, which the
-# kitty half of the toggle already controls.
-#
-# Entry points: the MOD+C command menu (rofi/commands.sh) and the
-# ~/.local/bin/nmtui symlink that shadows /usr/bin/nmtui for shell use.
 
 if [ -f "$HOME/.cache/high-contrast-mode" ]; then
-    # sunlight: black on paper-white. lightgray (#888888 in highcontrast.conf)
-    # marks inputs and the selected row — black-on-gray stays readable outdoors.
     NEWT_COLORS='
         root=black,default
         roottext=black,default
@@ -43,8 +27,6 @@ if [ -f "$HOME/.cache/high-contrast-mode" ]; then
         fullscale=,black
     '
 else
-    # glitchcore: teal-on-void base, cyan marks the active element,
-    # classification red marks the focused button.
     NEWT_COLORS='
         root=green,default
         roottext=green,default
@@ -73,5 +55,4 @@ else
 fi
 
 export NEWT_COLORS
-# absolute path: ~/.local/bin/nmtui links here, so a plain `exec nmtui` would recurse
 exec /usr/bin/nmtui "$@"

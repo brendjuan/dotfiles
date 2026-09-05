@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Launch kitty with 4 windows in a 2x2 grid layout
-# Usage: k4 [directory]  (defaults to $HOME)
 
 DIR="${1:-$HOME}"
 

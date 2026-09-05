@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-"""
-claude-usage.py — claude /usage numbers for waybar.
-hits the oauth usage endpoint anthropic uses internally for /usage. returns the
-exact five_hour and seven_day utilization percentages — same data as `/usage`.
-
-discovered via https://github.com/anthropics/claude-code/issues/13585.
-auth: bearer token from ~/.claude/.credentials.json (refreshed by the cli).
-
-emits the waybar custom-module json contract: {text, tooltip, class, alt}.
-"""
 import json
 import os
 import sys
@@ -21,9 +10,9 @@ URL = "https://api.anthropic.com/api/oauth/usage"
 BETA = "oauth-2025-04-20"
 CREDS = os.path.expanduser("~/.claude/.credentials.json")
 CACHE = os.path.expanduser("~/.cache/claude-usage.json")
-TTL = 60  # endpoint is cheap but we don't need sub-minute resolution
+TTL = 60
 
-ICON = "󰧠"  # nf-md-brain — AI-thinking chip
+ICON = "󰧠"
 
 
 def load_token():
@@ -46,7 +35,6 @@ def fetch():
 
 
 def color_class(pct):
-    # green <75, yellow 75–85, orange 85–90, red ≥90
     if pct < 75:
         return "green"
     if pct < 85:
@@ -66,7 +54,6 @@ def parse_reset(s):
 
 
 def fmt_reset(s, now=None):
-    """human-friendly 'resets in 2h15m' / 'in 3d 4h'."""
     dt = parse_reset(s)
     if not dt:
         return "?"
@@ -102,7 +89,6 @@ def emit(payload, error=None, stale=False):
         f"  session: {five:.0f}% (resets in {five_reset})",
         f"  weekly:  {seven:.0f}% (resets in {seven_reset})",
     ]
-    # per-model quotas moved from seven_day_{sonnet,opus} into limits[].scope
     for lim in payload.get("limits") or []:
         model = ((lim.get("scope") or {}).get("model") or {}).get("display_name")
         if not model:
@@ -112,7 +98,6 @@ def emit(payload, error=None, stale=False):
                      f" (resets in {fmt_reset(lim.get('resets_at'))})")
     extra = payload.get("extra_usage") or {}
     if extra.get("is_enabled"):
-        # used_credits/monthly_limit are minor units (cents when decimal_places=2)
         scale = 10 ** (extra.get("decimal_places") or 2)
         used = (extra.get("used_credits") or 0) / scale
         cap = extra.get("monthly_limit")

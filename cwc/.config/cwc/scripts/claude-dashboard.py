@@ -1,13 +1,3 @@
-#!/usr/bin/env python3
-"""
-claude-dashboard.py — interrogation-room view of claude /usage.
-queries the same oauth endpoint as the waybar chip and shows every quota window
-plus extra-usage credit state. invoked from waybar on click via kitty floating term.
-
-endpoint: GET https://api.anthropic.com/api/oauth/usage
-   header: anthropic-beta: oauth-2025-04-20
-     auth: bearer token from ~/.claude/.credentials.json
-"""
 import json
 import os
 import sys
@@ -19,9 +9,8 @@ from datetime import datetime, timezone
 URL = "https://api.anthropic.com/api/oauth/usage"
 BETA = "oauth-2025-04-20"
 CREDS = os.path.expanduser("~/.claude/.credentials.json")
-CACHE = os.path.expanduser("~/.cache/claude-usage.json")  # shared with the chip
+CACHE = os.path.expanduser("~/.cache/claude-usage.json")
 
-# ANSI — match the glitchcore palette
 TEAL = "\033[38;2;0;255;180m"
 RED = "\033[38;2;255;0;80m"
 AMBER = "\033[38;2;255;85;0m"
@@ -166,7 +155,6 @@ def main():
     source = "live"
     try:
         payload = fetch()
-        # write through to shared cache so the chip sees fresh data too
         try:
             os.makedirs(os.path.dirname(CACHE), exist_ok=True)
             with open(CACHE, "w") as f:

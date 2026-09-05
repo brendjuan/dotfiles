@@ -2,24 +2,17 @@ local gears = require("gears")
 local enum = require("cuteful.enum")
 
 local conf = {
-    -- misc --
     tasklist_show_all                  = false,
     middle_click_paste                 = true,
 
-    -- pointer config --
     cursor_size                        = 20,
     cursor_inactive_timeout            = 5000,
     cursor_edge_threshold              = 32,
     cursor_edge_snapping_overlay_color = { 0.1, 0.2, 0.3, 0.05 },
 
-    -- keyboard config --
     repeat_rate                        = 30,
     repeat_delay                       = 300,
-    -- xkb_variant                        = "colemak",
-    -- xkb_layout                         = "us,de,fr",
-    -- xkb_options                        = "grp:alt_shift_toggle,grp:caps_select",
 
-    -- client config --
     default_decoration_mode            = enum.decoration_mode.SERVER_SIDE,
     border_width                       = 1,
     border_color_rotation              = 64,
@@ -28,7 +21,6 @@ local conf = {
     border_color_normal                = gears.color("#423e44"),
     border_color_raised                = gears.color("#d2d6f9"),
 
-    -- screen/tag config --
     useless_gaps                       = 3,
 }
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# auto-generated keybind cheatsheet — content built by keybind.lua, dumped to /tmp
 
 CHEAT_FILE="/tmp/cwc-cheatsheet.txt"
 [[ ! -s "$CHEAT_FILE" ]] && exit 0

@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# glitch-wallpaper.sh — MAXIMUM CHAOS submarine defense glitchcore wallpaper
-# theme: underwater classified ops + broken CRT + meme energy
-# Dependencies: imagemagick (convert)
 
 set -euo pipefail
 
@@ -13,13 +10,11 @@ FONT="Hack-Nerd-Font"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-# --- base: deep ocean void gradient ---
 convert -size "${W}x${H}" \
     "gradient:#05001a-#001a0f" \
     -sigmoidal-contrast 4x40% \
     "$tmp/canvas.png"
 
-# --- underwater murk: layered blue-green fog patches ---
 for _ in $(seq 1 8); do
     cx=$((RANDOM % W))
     cy=$((RANDOM % H))
@@ -36,10 +31,6 @@ for _ in $(seq 1 8); do
         "$tmp/canvas.png"
 done
 
-# ============================
-# SONAR RINGS (defense HUD)
-# ============================
-# big sonar ping circles
 for _ in $(seq 1 3); do
     cx=$((200 + RANDOM % (W - 400)))
     cy=$((200 + RANDOM % (H - 400)))
@@ -49,7 +40,6 @@ for _ in $(seq 1 3); do
             -draw "circle $cx,$cy $((cx + r)),$cy" \
             "$tmp/canvas.png"
     done
-    # sonar crosshair
     convert "$tmp/canvas.png" \
         -stroke "rgba(0,255,170,0.08)" -strokewidth 1 \
         -draw "line $((cx - 250)),$cy $((cx + 250)),$cy" \
@@ -57,7 +47,6 @@ for _ in $(seq 1 3); do
         "$tmp/canvas.png"
 done
 
-# small sonar blips (contacts)
 for _ in $(seq 1 12); do
     bx=$((RANDOM % W))
     by=$((RANDOM % H))
@@ -66,10 +55,6 @@ for _ in $(seq 1 12); do
         "$tmp/canvas.png"
 done
 
-# ============================
-# HORIZONTAL GLITCH TEARS - CRANKED
-# ============================
-# magenta tears
 for _ in $(seq 1 70); do
     y=$((RANDOM % H))
     thickness=$((1 + RANDOM % 3))
@@ -82,7 +67,6 @@ for _ in $(seq 1 70); do
         "$tmp/canvas.png"
 done
 
-# toxic green tears
 for _ in $(seq 1 50); do
     y=$((RANDOM % H))
     thickness=$((1 + RANDOM % 3))
@@ -95,7 +79,6 @@ for _ in $(seq 1 50); do
         "$tmp/canvas.png"
 done
 
-# deep ocean blue tears
 for _ in $(seq 1 30); do
     y=$((RANDOM % H))
     thickness=$((1 + RANDOM % 2))
@@ -108,7 +91,6 @@ for _ in $(seq 1 30); do
         "$tmp/canvas.png"
 done
 
-# FULL WIDTH glitch tears (the scuffed ones)
 for _ in $(seq 1 10); do
     y=$((RANDOM % H))
     tint=$((RANDOM % 3))
@@ -123,9 +105,6 @@ for _ in $(seq 1 10); do
         "$tmp/canvas.png"
 done
 
-# ============================
-# VERTICAL DATA COLUMNS
-# ============================
 for _ in $(seq 1 25); do
     x=$((RANDOM % W))
     col_w=$((1 + RANDOM % 3))
@@ -144,9 +123,6 @@ for _ in $(seq 1 25); do
         "$tmp/canvas.png"
 done
 
-# ============================
-# CORRUPTION BLOCKS
-# ============================
 for _ in $(seq 1 30); do
     bx=$((RANDOM % W))
     by=$((RANDOM % H))
@@ -166,7 +142,6 @@ for _ in $(seq 1 30); do
         "$tmp/canvas.png"
 done
 
-# bright accent bars
 for _ in $(seq 1 18); do
     y=$((RANDOM % H))
     x_start=$((RANDOM % (W / 2)))
@@ -183,7 +158,6 @@ for _ in $(seq 1 18); do
         "$tmp/canvas.png"
 done
 
-# red alert flickers
 for _ in $(seq 1 10); do
     y=$((RANDOM % H))
     x_start=$((RANDOM % W))
@@ -194,9 +168,6 @@ for _ in $(seq 1 10); do
         "$tmp/canvas.png"
 done
 
-# ============================
-# DATA NOISE BLOCKS
-# ============================
 for _ in $(seq 1 18); do
     bx=$((50 + RANDOM % (W - 200)))
     by=$((50 + RANDOM % (H - 100)))
@@ -212,11 +183,6 @@ for _ in $(seq 1 18); do
         "$tmp/canvas.png"
 done
 
-# ============================
-# TEXT OVERLAYS — CLASSIFIED / DEFENSE / SUBMARINE / MEME
-# ============================
-
-# TOP SECRET stamps
 declare -a stamps=(
     "TOP SECRET"
     "CLASSIFIED"
@@ -246,7 +212,6 @@ for _ in $(seq 1 5); do
         "$tmp/canvas.png" 2>/dev/null || true
 done
 
-# Defense HUD readouts
 declare -a hud_lines=(
     "DEPTH: 847m  PRESSURE: 87.3 bar"
     "BEARING: 127.4°  SPEED: 12kts"
@@ -282,7 +247,6 @@ for _ in $(seq 1 10); do
         "$tmp/canvas.png" 2>/dev/null || true
 done
 
-# Shark warnings + meme text
 declare -a meme_lines=(
     "🦈 SHARK DETECTED 🦈"
     "oh god oh fuck its a megalodon"
@@ -319,7 +283,6 @@ for _ in $(seq 1 8); do
         "$tmp/canvas.png" 2>/dev/null || true
 done
 
-# Corner HUD elements
 convert "$tmp/canvas.png" \
     -font "$FONT" -pointsize 11 \
     -fill "rgba(0,255,170,0.35)" -stroke none \
@@ -329,16 +292,12 @@ convert "$tmp/canvas.png" \
     -gravity SouthEast -annotate "+20+15" "REACTOR: ONLINE  SHARKS: YES" \
     "$tmp/canvas.png" 2>/dev/null || true
 
-# Big watermark stamp diagonally
 convert "$tmp/canvas.png" \
     -font "$FONT" -pointsize 90 \
     -fill "rgba(255,0,60,0.06)" -stroke "rgba(255,0,60,0.03)" -strokewidth 2 \
     -gravity Center -annotate "-25+0" "TOP SECRET" \
     "$tmp/canvas.png" 2>/dev/null || true
 
-# ============================
-# SHARK ASCII (subtle, ghostly)
-# ============================
 shark='    /\___/\\
    / o   o \\
   (    \"    )
@@ -354,7 +313,6 @@ convert "$tmp/canvas.png" \
     -gravity NorthWest -annotate "+${sx}+${sy}" "$shark" \
     "$tmp/canvas.png" 2>/dev/null || true
 
-# Second shark, different position
 sx=$((RANDOM % (W - 300)))
 sy=$((RANDOM % (H - 300)))
 convert "$tmp/canvas.png" \
@@ -363,9 +321,6 @@ convert "$tmp/canvas.png" \
     -gravity NorthWest -annotate "+${sx}+${sy}" "$shark" \
     "$tmp/canvas.png" 2>/dev/null || true
 
-# ============================
-# SUBMARINE ASCII
-# ============================
 sub='         __|__
     ____/     \____
    /    |  O  |    \\
@@ -382,11 +337,6 @@ convert "$tmp/canvas.png" \
     -gravity NorthWest -annotate "+${sx}+${sy}" "$sub" \
     "$tmp/canvas.png" 2>/dev/null || true
 
-# ============================
-# POST-PROCESSING
-# ============================
-
-# CRT scanlines (opaque)
 convert -size "${W}x2" xc:white \
     -fill "gray85" -draw "rectangle 0,1 ${W},1" \
     -alpha off \
@@ -398,7 +348,6 @@ convert "$tmp/canvas.png" "$tmp/scanlines.png" \
     -compose Multiply -composite \
     "$tmp/scanned.png"
 
-# noise grain
 convert -size "${W}x${H}" xc:gray50 \
     -attenuate 0.07 +noise Gaussian \
     -colorspace Gray -alpha off \
@@ -408,7 +357,6 @@ convert "$tmp/scanned.png" "$tmp/noise.png" \
     -compose Overlay -composite \
     "$tmp/noisy.png"
 
-# gentle vignette
 convert -size "${W}x${H}" \
     radial-gradient:white-black \
     -level 25%,100% -alpha off \
@@ -419,7 +367,6 @@ convert "$tmp/noisy.png" "$tmp/vignette.png" \
     -compose Multiply -composite \
     "$OUT"
 
-# pre-generate inverted version for high contrast toggle
 INVERTED="${OUT%.png}-inverted.png"
 convert "$OUT" -negate "$INVERTED"
 

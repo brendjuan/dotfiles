@@ -1,18 +1,3 @@
-#!/usr/bin/env python3
-"""Fullscreen terminal GPS fix indicator.
-
-Subscribes to a sensor_msgs/NavSatFix topic and paints the entire terminal
-green (FIX) or red (NO FIX). The footer shows the SBG INS solution mode,
-the raw GPS pos-type, and the number of satellites used in the solution.
-
-If no NavSatFix publisher is present, the screen reads "NO GPS TOPIC" on
-red.
-
-Usage:
-    python3 gps-fix.py
-    python3 gps-fix.py --gps-topic /ins/imu/nav_sat_fix
-"""
-
 import argparse
 import shutil
 import signal
@@ -27,7 +12,6 @@ from sbg_driver.msg import SbgEkfNav, SbgGpsPos
 from sensor_msgs.msg import NavSatFix, NavSatStatus
 
 
-# SbgEkfStatus.solution_mode (see sbg_driver/msg/SbgEkfStatus.msg).
 _SOLUTION_MODE_LABELS = {
     0: "UNINIT",
     1: "VGYRO",
@@ -36,7 +20,6 @@ _SOLUTION_MODE_LABELS = {
     4: "NAV_POS",
 }
 
-# SbgGpsPosStatus.type (see sbg_driver/msg/SbgGpsPosStatus.msg).
 _GPS_POS_TYPE_LABELS = {
     0: "NO_SOL",
     1: "UNKNOWN",
@@ -51,11 +34,9 @@ _GPS_POS_TYPE_LABELS = {
     10: "FIXED",
 }
 
-# SbgGpsPos.num_sv_used uses 0xFF as the "not available" sentinel.
 _NUM_SV_NA = 0xFF
 
 
-# ANSI escape sequences
 RESET = "\033[0m"
 HIDE_CURSOR = "\033[?25l"
 SHOW_CURSOR = "\033[?25h"
@@ -67,8 +48,6 @@ FG_WHITE = "\033[97m"
 BOLD = "\033[1m"
 
 
-# 5-row block font, rendered with full-block characters. Each glyph is
-# returned as a list of 5 equal-width strings.
 _GLYPHS = {
     "F": [
         "█████",
@@ -151,7 +130,6 @@ _GLYPHS = {
 
 
 def render_block_text(text: str) -> list[str]:
-    """Render uppercase ASCII text into a list of 5 strings (block letters)."""
     text = text.upper()
     rows = ["", "", "", "", ""]
     for i, ch in enumerate(text):
@@ -176,12 +154,12 @@ class GpsFixNode(Node):
         self.gps_topic = gps_topic
 
         self.lock = threading.Lock()
-        self.gps_status: int | None = None  # NavSatStatus.status
+        self.gps_status: int | None = None
         self.last_gps_time: float | None = None
-        self.solution_mode: int | None = None  # SbgEkfStatus.solution_mode
+        self.solution_mode: int | None = None
         self.last_ekf_nav_time: float | None = None
-        self.gps_pos_type: int | None = None  # SbgGpsPosStatus.type
-        self.num_sv_used: int | None = None  # SbgGpsPos.num_sv_used
+        self.gps_pos_type: int | None = None
+        self.num_sv_used: int | None = None
         self.last_gps_pos_time: float | None = None
 
         self.create_subscription(NavSatFix, gps_topic, self._on_gps, qos)
@@ -251,7 +229,6 @@ def build_footer(snap: dict, stale_after: float) -> str:
 def render(snap: dict, stale_after: float) -> None:
     cols, rows = shutil.get_terminal_size((80, 24))
 
-    # Determine state
     no_topic = not snap["has_publisher"]
     stale = (
         snap["last_gps_time"] is not None
@@ -285,22 +262,18 @@ def render(snap: dict, stale_after: float) -> None:
 
     out = [HOME, style]
 
-    # Paint every row with the bg color, full width.
     blank = " " * cols
     for _ in range(rows):
         out.append(blank)
 
-    # Position the block text. Center vertically (excluding the footer line).
     top = max(0, (rows - 1 - block_h) // 2)
     left = max(0, (cols - block_w) // 2)
     for i, line in enumerate(block_rows):
         if top + i + 1 > rows - 1:
             break
-        # Truncate if the terminal is too narrow.
         visible = line[: max(0, cols - left)]
         out.append(f"\033[{top + i + 1};{left + 1}H{visible}")
 
-    # Footer on the last row, centered.
     footer = footer[:cols]
     fleft = max(0, (cols - len(footer)) // 2)
     out.append(f"\033[{rows};{fleft + 1}H{footer}")
@@ -352,11 +325,9 @@ def main() -> None:
     sys.stdout.write(HIDE_CURSOR + CLEAR)
     sys.stdout.flush()
 
-    # Repaint on terminal resize.
     redraw_event = threading.Event()
 
     def on_resize(_signum, _frame):
-        # Force a full repaint on next tick.
         sys.stdout.write(CLEAR)
         sys.stdout.flush()
         redraw_event.set()
