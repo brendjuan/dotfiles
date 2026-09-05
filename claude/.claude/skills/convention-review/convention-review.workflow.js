@@ -12,9 +12,9 @@ const ARGS = (typeof args === 'string') ? JSON.parse(args) : (args || {})
 const RANGE = ARGS.range || 'origin/main...HEAD'
 const PRIOR = ARGS.priorReviewPath || ''
 const SCOPE = ARGS.scope || RANGE
-const VAULT = ARGS.vaultPath || ''
-const REPO = ARGS.repo || 'repo'
-const SHA = ARGS.sha || ''
+const VAULT = ARGS.vaultPath || '' // resolved by the skill; the on-disk convention backbone (built by convention-learn)
+const REPO = ARGS.repo || 'repo' // canonical repo name (from the git remote, not the checkout dir) — the per-repo vault folder
+const SHA = ARGS.sha || '' // short HEAD sha the vault was last learned against (for the report header)
 
 const DIFF_CMD = RANGE ? `git --no-pager diff ${RANGE}` : 'git --no-pager diff'
 const FILES_CMD = RANGE ? `git --no-pager diff --name-only ${RANGE}` : 'git --no-pager diff --name-only'
@@ -22,6 +22,7 @@ const FILES_CMD = RANGE ? `git --no-pager diff --name-only ${RANGE}` : 'git --no
 const REPO_DIR = VAULT ? `${VAULT}/${REPO}` : ''
 const ROS_DIR = VAULT ? `${VAULT}/ros2-standards` : ''
 
+// NOTE: dimension keys are the shared contract with convention-learn (they name the vault folders). Keep them in sync.
 const DIMENSIONS = [
   {
     key: 'package-metadata',
@@ -139,6 +140,7 @@ Method:
 Put the vault note id (or "unstated" for a new cross-cutting norm) in 'convention', evidence in 'convention_evidence', and the exact PR file:line. Be precise.`
 }
 
+// Split the dimension list into contiguous groups so a single agent can own several dimensions on a small diff.
 function chunkContiguous(arr, n) {
   const groups = Math.max(1, Math.min(n, arr.length))
   const size = Math.ceil(arr.length / groups)
@@ -147,17 +149,18 @@ function chunkContiguous(arr, n) {
   return out
 }
 
+// How many check agents to fan out, scaled by diff size. args.checkAgents forces it; unknown size -> full per-dimension.
 function pickGroupCount() {
   if (Number.isFinite(ARGS.checkAgents) && ARGS.checkAgents > 0) return Math.min(ARGS.checkAgents, DIMENSIONS.length)
   const files = Number.isFinite(ARGS.changedFiles) ? ARGS.changedFiles : null
   const lines = Number.isFinite(ARGS.diffLines) ? ARGS.diffLines : null
-  if (files == null && lines == null) return DIMENSIONS.length
+  if (files == null && lines == null) return DIMENSIONS.length // unknown -> be thorough
   const f = files == null ? 9999 : files
   const l = lines == null ? 999999 : lines
-  if (f <= 2 && l <= 60) return 1
-  if (f <= 6 && l <= 250) return 3
-  if (f <= 15 && l <= 800) return 5
-  return DIMENSIONS.length
+  if (f <= 2 && l <= 60) return 1 // tiny: one agent covers all dimensions
+  if (f <= 6 && l <= 250) return 3 // small
+  if (f <= 15 && l <= 800) return 5 // medium
+  return DIMENSIONS.length // large: full per-dimension
 }
 
 if (!VAULT) {
@@ -167,6 +170,7 @@ if (!VAULT) {
 phase('Check')
 const nGroups = pickGroupCount()
 const groups = chunkContiguous(DIMENSIONS, nGroups)
+// A single all-dimensions group (tiny diff) folds the holistic lens in; otherwise the holistic pass runs separately on Fable.
 const soloGroup = groups.length === 1
 log(`Check fan-out: ${groups.length} group(s) over ${DIMENSIONS.length} dimensions${soloGroup ? ' (holistic folded in)' : ' + holistic(fable)'} — files=${Number.isFinite(ARGS.changedFiles) ? ARGS.changedFiles : '?'} lines=${Number.isFinite(ARGS.diffLines) ? ARGS.diffLines : '?'}`)
 const checkThunks = groups.map((dims) => () =>
