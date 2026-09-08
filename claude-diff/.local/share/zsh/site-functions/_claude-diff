@@ -1,0 +1,33 @@
+#compdef claude-diff
+
+_claude_diff_refs() {
+  local -a refs
+  compset -P '*...' || compset -P '*..'
+  refs=(${(f)"$(git for-each-ref --format='%(refname:short)' refs/heads refs/remotes refs/tags 2>/dev/null)"})
+  compadd -- HEAD $refs
+}
+
+_claude_diff_prs() {
+  local -a prs
+  prs=(${(f)"$(gh pr list --state open --limit 50 --json number,title,headRefName --jq '.[] | "\(.number):\(.title) [\(.headRefName)]"' 2>/dev/null)"})
+  if (( ${#prs} )); then
+    _describe -t prs 'pull request' prs
+  else
+    _message 'no open pull requests (gh pr list)'
+  fi
+}
+
+_claude-diff() {
+  _arguments -s \
+    '--pane[open in a kitty split to the right of this window]' \
+    '--close[close the split for this repository]' \
+    '--toggle[open the split, or close it if it is open]' \
+    '--context[context lines around a change]:lines:(3 10 25)' \
+    '--layout[where the file tree goes]:layout:(top side hidden)' \
+    '--pr[compare a pull request; without a value, the one of the current branch]:pull request:_claude_diff_prs' \
+    '(-h --help)'{-h,--help}'[show help]' \
+    '1:base revision:_claude_diff_refs' \
+    '2:head revision:_claude_diff_refs'
+}
+
+_claude-diff "$@"

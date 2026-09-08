@@ -6,6 +6,8 @@ zstyle :omz:plugins:ssh-agent identities id_ed25519_personal id_ed25519
 
 plugins=(git bazel bun colored-man-pages colorize command-not-found cp debian dirhistory docker docker-compose emoji golang history kitty mise nomad pip podman python rsync rust ssh ssh-agent sudo systemd task tmux ubuntu uv yum)
 
+fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
+
 source $ZSH/oh-my-zsh.sh
 
 [ -s "/home/bjax/.bun/_bun" ] && source "/home/bjax/.bun/_bun"
