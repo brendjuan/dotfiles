@@ -156,7 +156,7 @@ def resolve_compare(root, refs):
     return Compare("HEAD", None, "HEAD", "working tree")
 
 
-def resolve_pr(root, pr):
+def resolve_pr(root, pr, local=False):
     match = PR_URL_RE.search(pr)
     number = match.group(1) if match else pr.lstrip("#")
     proc = subprocess.run(
@@ -168,22 +168,29 @@ def resolve_pr(root, pr):
     if proc.returncode != 0:
         raise GitError(proc.stderr.strip() or "gh pr view failed")
     info = json.loads(proc.stdout)
-    head = f"refs/remotes/origin/pr/{info['number']}"
-    base_branch = info["baseRefName"]
-    run_git(
-        root,
-        "fetch",
-        "-q",
-        "origin",
-        f"+refs/pull/{info['number']}/head:{head}",
-        f"+refs/heads/{base_branch}:refs/remotes/origin/{base_branch}",
-    )
-    base = run_git(root, "merge-base", f"origin/{base_branch}", head).strip()
-    return Compare(base, head, base_branch, f"PR #{info['number']} {info['headRefName']}")
+    base_branch, head_branch = info["baseRefName"], info["headRefName"]
+    label = f"PR #{info['number']} {head_branch}"
+    refspecs = [f"+refs/heads/{base_branch}:refs/remotes/origin/{base_branch}"]
+    if local:
+        try:
+            rev_parse(root, head_branch)
+        except GitError:
+            raise GitError(f"branch {head_branch} does not exist locally; drop --local to use the pushed head")
+        if run_git(root, "branch", "--show-current").strip() == head_branch:
+            head, head_ref, label = None, "HEAD", f"{label} (working tree)"
+        else:
+            head = head_ref = head_branch
+            label += " (local)"
+    else:
+        head = head_ref = f"refs/remotes/origin/pr/{info['number']}"
+        refspecs.insert(0, f"+refs/pull/{info['number']}/head:{head}")
+    run_git(root, "fetch", "-q", "origin", *refspecs)
+    base = run_git(root, "merge-base", f"origin/{base_branch}", head_ref).strip()
+    return Compare(base, head, f"origin/{base_branch}", label)
 
 
-def resolve_target(root, refs, pr):
-    return resolve_pr(root, pr) if pr else resolve_compare(root, refs)
+def resolve_target(root, refs, pr, local=False):
+    return resolve_pr(root, pr, local) if pr else resolve_compare(root, refs)
 
 
 @dataclass
@@ -514,7 +521,7 @@ class DiffApp(App):
         Binding("shift+tab", "focus_previous", "Switch pane", show=False),
     ]
 
-    def __init__(self, root, refs, compare, context, layout="top", pr=None):
+    def __init__(self, root, refs, compare, context, layout="top", pr=None, pr_local=False):
         super().__init__(ansi_color=True)
         self.layout = layout if layout in LAYOUTS else "top"
         self.mode = terminal_mode()
@@ -522,6 +529,7 @@ class DiffApp(App):
         self.root = root
         self.refs = refs
         self.pr = pr
+        self.pr_local = pr_local
         self.last_fetch = time.monotonic()
         self.compare = compare
         self.context = context if context in CONTEXT_STEPS else CONTEXT_STEPS[0]
@@ -566,7 +574,7 @@ class DiffApp(App):
     @work(thread=True, exclusive=True, group="load")
     def load(self):
         try:
-            compare = resolve_target(self.root, self.refs, self.pr)
+            compare = resolve_target(self.root, self.refs, self.pr, self.pr_local)
             self.last_fetch = time.monotonic()
             files = list_files(self.root, compare)
             stamp = fingerprint(self.root, compare, self.current)
@@ -773,7 +781,7 @@ class DiffApp(App):
         try:
             if self.pr and time.monotonic() - self.last_fetch > FETCH_SECONDS:
                 self.last_fetch = time.monotonic()
-                resolve_pr(self.root, self.pr)
+                resolve_pr(self.root, self.pr, self.pr_local)
             stamp = fingerprint(self.root, self.compare, self.current)
         except GitError:
             return
@@ -922,6 +930,12 @@ def main():
         "Without a value, the pull request of the current branch. Needs gh.",
     )
     parser.add_argument(
+        "--local",
+        action="store_true",
+        help="with --pr: compare the local branch of the pull request, with uncommitted changes when it is "
+        "checked out, against the base branch on origin",
+    )
+    parser.add_argument(
         "--worktree",
         metavar="NAME|PATH",
         help="use another worktree of this repository, by directory name, branch, or path",
@@ -930,6 +944,8 @@ def main():
     args = parser.parse_args()
     if args.pr and args.refs:
         parser.error("give either revisions or --pr, not both")
+    if args.local and not args.pr:
+        parser.error("--local needs --pr")
     try:
         root = repo_root(os.getcwd())
         if args.worktree:
@@ -940,16 +956,18 @@ def main():
             return
         if args.toggle_self and not become_pane(root):
             return
-        compare = resolve_target(root, args.refs, args.pr)
+        compare = resolve_target(root, args.refs, args.pr, args.local)
     except GitError as error:
         raise SystemExit(f"claude-diff: {error}")
     if args.pane or args.toggle:
         if not os.environ.get("KITTY_LISTEN_ON"):
             raise SystemExit("claude-diff: --pane needs a kitty window with remote control enabled")
-        options = ["--context", str(args.context), "--layout", args.layout] + (["--pr", args.pr] if args.pr else [])
+        options = ["--context", str(args.context), "--layout", args.layout]
+        if args.pr:
+            options += ["--pr", args.pr] + (["--local"] if args.local else [])
         pane_open(root, args.refs, compare, options)
         return
-    DiffApp(root, args.refs, compare, args.context, layout=args.layout, pr=args.pr).run()
+    DiffApp(root, args.refs, compare, args.context, layout=args.layout, pr=args.pr, pr_local=args.local).run()
 
 
 if __name__ == "__main__":

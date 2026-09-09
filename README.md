@@ -121,6 +121,7 @@ It reloads every two seconds while files or branches change. It needs `uv`, whic
 | `claude-diff feat/a feat/b` | What `feat/b` adds on top of `feat/a`, like a pull request |
 | `claude-diff feat/a..feat/b` | Plain two-point diff |
 | `claude-diff --pr 42` | A GitHub pull request, by number or URL, fetched through `gh`. `--pr` alone takes the pull request of the current branch. |
+| `claude-diff --pr --local` | The local branch of the pull request against its base branch on origin. When the branch is checked out, uncommitted changes are included. |
 | `claude-diff --worktree NAME ...` | Run against another worktree of the repository, by directory name, branch, or path. Its uncommitted changes are included. |
 | `claude-diff --pane ...` | Open the viewer in a kitty split to the right of the current window, 45 percent wide |
 | `claude-diff --toggle ...` | Open the split, or close it when it is already open |
