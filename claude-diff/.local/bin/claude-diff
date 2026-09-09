@@ -80,6 +80,25 @@ def repo_root(path):
         raise GitError(f"{path} is not inside a git repository")
 
 
+def find_worktree(root, name):
+    worktrees = []
+    path = branch = None
+    for line in run_git(root, "worktree", "list", "--porcelain").splitlines() + [""]:
+        if line.startswith("worktree "):
+            path = line[len("worktree ") :]
+        elif line.startswith("branch "):
+            branch = line[len("branch ") :].removeprefix("refs/heads/")
+        elif not line and path:
+            worktrees.append((path, branch))
+            path = branch = None
+    target = os.path.abspath(name) if os.path.exists(name) else None
+    for path, branch in worktrees:
+        if path in (name, target) or name in (os.path.basename(path), branch):
+            return path
+    known = ", ".join(os.path.basename(path) for path, _ in worktrees)
+    raise GitError(f"no worktree named {name}; known worktrees: {known}")
+
+
 def rev_parse(root, ref):
     try:
         return run_git(root, "rev-parse", "--verify", "-q", f"{ref}^{{commit}}").strip()
@@ -902,12 +921,19 @@ def main():
         help="compare a GitHub pull request: its head against the merge base with its base branch. "
         "Without a value, the pull request of the current branch. Needs gh.",
     )
+    parser.add_argument(
+        "--worktree",
+        metavar="NAME|PATH",
+        help="use another worktree of this repository, by directory name, branch, or path",
+    )
     parser.add_argument("--toggle-self", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.pr and args.refs:
         parser.error("give either revisions or --pr, not both")
     try:
         root = repo_root(os.getcwd())
+        if args.worktree:
+            root = find_worktree(root, args.worktree)
         if args.close:
             raise SystemExit(0 if pane_close(root) else 1)
         if args.toggle and pane_close(root):

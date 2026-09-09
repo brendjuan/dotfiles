@@ -121,6 +121,7 @@ It reloads every two seconds while files or branches change. It needs `uv`, whic
 | `claude-diff feat/a feat/b` | What `feat/b` adds on top of `feat/a`, like a pull request |
 | `claude-diff feat/a..feat/b` | Plain two-point diff |
 | `claude-diff --pr 42` | A GitHub pull request, by number or URL, fetched through `gh`. `--pr` alone takes the pull request of the current branch. |
+| `claude-diff --worktree NAME ...` | Run against another worktree of the repository, by directory name, branch, or path. Its uncommitted changes are included. |
 | `claude-diff --pane ...` | Open the viewer in a kitty split to the right of the current window, 45 percent wide |
 | `claude-diff --toggle ...` | Open the split, or close it when it is already open |
 | `claude-diff --close` | Close the split for this repository |
@@ -131,7 +132,7 @@ When the diff has focus, the arrow keys or `h` and `l` scroll it, also sideways 
 Click a file in the tree or an arrow in a fold line. The mouse wheel scrolls.
 
 The kitty package binds `ctrl+shift+d` to open the split for the directory of the current window, or close it when it is open.
-Zsh completes the revisions with branches, tags, and `HEAD`, also after `..` and `...`, and completes `--pr` with the open pull requests. The completion file lives in `~/.local/share/zsh/site-functions`, which `.zshrc` adds to `fpath`.
+Zsh completes the revisions with branches, tags, and `HEAD`, also after `..` and `...`, `--pr` with the open pull requests, and `--worktree` with the worktrees. The completion file lives in `~/.local/share/zsh/site-functions`, which `.zshrc` adds to `fpath`.
 From a Claude Code session, ask Claude to run `claude-diff --pane feat/a feat/b`. The split opens next to that session.
 
 ## apps

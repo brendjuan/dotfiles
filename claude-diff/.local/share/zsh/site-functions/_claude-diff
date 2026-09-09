@@ -17,8 +17,22 @@ _claude_diff_prs() {
   fi
 }
 
+_claude_diff_worktrees() {
+  local -a items
+  local line dir branch
+  while IFS= read -r line; do
+    case $line in
+      'worktree '*) dir=${line#worktree } ;;
+      'branch '*) branch=${line#branch refs/heads/} ;;
+      '') [[ -n $dir ]] && items+=("${dir:t}:${branch:-detached}  $dir"); dir=; branch= ;;
+    esac
+  done < <(git worktree list --porcelain 2>/dev/null; echo)
+  _describe -t worktrees 'worktree' items
+}
+
 _claude-diff() {
   _arguments -s \
+    '--worktree[use another worktree of this repository]:worktree:_claude_diff_worktrees' \
     '--pane[open in a kitty split to the right of this window]' \
     '--close[close the split for this repository]' \
     '--toggle[open the split, or close it if it is open]' \
