@@ -32,14 +32,14 @@ _claude_diff_worktrees() {
 
 _claude-diff() {
   _arguments -s \
-    '--worktree[use another worktree of this repository]:worktree:_claude_diff_worktrees' \
-    '--pane[open in a kitty split to the right of this window]' \
-    '--close[close the split for this repository]' \
-    '--toggle[open the split, or close it if it is open]' \
-    '--context[context lines around a change]:lines:(3 10 25)' \
-    '--layout[where the file tree goes]:layout:(top side hidden)' \
-    '--pr[compare a pull request; without a value, the one of the current branch]:pull request:_claude_diff_prs' \
+    '--pr[a GitHub pull request, as pushed; alone, the one of the current branch]:pull request:_claude_diff_prs' \
     '--local[with --pr: the local branch instead of the pushed head]' \
+    '--worktree[run in another worktree of this repository]:worktree:_claude_diff_worktrees' \
+    '--pane[open in a split right of this window]' \
+    '--toggle[open the split, or close it if it is open]' \
+    '--close[close the split of this repository]' \
+    '--context[lines of context around a change]:lines:(3 10 25)' \
+    '--layout[place of the file tree]:layout:(top side hidden)' \
     '(-h --help)'{-h,--help}'[show help]' \
     '1:base revision:_claude_diff_refs' \
     '2:head revision:_claude_diff_refs'

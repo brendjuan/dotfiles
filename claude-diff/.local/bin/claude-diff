@@ -57,6 +57,20 @@ PALETTES = {
 }
 STATUS_STYLE = {"A": "green", "?": "green", "D": "red", "R": "yellow", "C": "yellow", "T": "magenta"}
 
+HELP_EPILOG = """\
+examples:
+  claude-diff                      working tree since the branch left the default branch
+  claude-diff main                 working tree against main
+  claude-diff feat/a feat/b        what feat/b adds on top of feat/a
+  claude-diff --pr 42              pull request 42, as pushed
+  claude-diff --pr --local         the pull request of this branch, with local changes
+  claude-diff --pane --pr 42       the same, in a kitty split next to this window
+
+keys:
+  j k     next or previous file     e   expand every fold      c   context 3, 10, 25
+  Enter   focus the diff            w   whole file             h l scroll sideways
+  t       move the file tree        r   reload                 q   quit"""
+
 HUNK_RE = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 TOKEN_RE = re.compile(r"\w+|\s+|[^\w\s]")
 
@@ -908,38 +922,44 @@ def become_pane(root):
 def main():
     parser = argparse.ArgumentParser(
         prog="claude-diff",
-        description="Browse a git diff with a file tree and expandable context. Refreshes while files change.",
+        description="Browse a git diff like GitHub's \"Files changed\" tab: a file tree, the diff of the\n"
+        "selected file, and folded context you expand per hunk. It reloads while files or\n"
+        "branches change.",
+        epilog=HELP_EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument(
+    what = parser.add_argument_group("what to compare")
+    what.add_argument(
         "refs",
         nargs="*",
-        help="BASE (against the working tree), BASE HEAD or BASE...HEAD (what HEAD adds since the merge base), "
-        "or BASE..HEAD (plain two-point diff). Default: merge base with the default branch, against the working tree.",
+        metavar="REV",
+        help="one revision: the working tree against it. Two revisions, or A...B: what B adds since the merge "
+        "base, like a pull request. A..B: the plain diff. None: the working tree since the branch left "
+        "the default branch.",
     )
-    parser.add_argument("--pane", action="store_true", help="open in a kitty split to the right of this window")
-    parser.add_argument("--close", action="store_true", help="close the kitty split for this repository")
-    parser.add_argument("--toggle", action="store_true", help="open the kitty split, or close it if it is open")
-    parser.add_argument("--context", type=int, default=3, choices=CONTEXT_STEPS, help="context lines around a change")
-    parser.add_argument("--layout", choices=LAYOUTS, default="top", help="where the file tree goes; t cycles at run time")
-    parser.add_argument(
+    what.add_argument(
         "--pr",
         nargs="?",
         const="current",
         metavar="NUMBER|URL",
-        help="compare a GitHub pull request: its head against the merge base with its base branch. "
-        "Without a value, the pull request of the current branch. Needs gh.",
+        help="a GitHub pull request, as pushed; alone, the one of the current branch (needs gh)",
     )
-    parser.add_argument(
+    what.add_argument(
         "--local",
         action="store_true",
-        help="with --pr: compare the local branch of the pull request, with uncommitted changes when it is "
-        "checked out, against the base branch on origin",
+        help="with --pr: the local branch instead of the pushed head; includes uncommitted changes when "
+        "the branch is checked out",
     )
-    parser.add_argument(
-        "--worktree",
-        metavar="NAME|PATH",
-        help="use another worktree of this repository, by directory name, branch, or path",
+    what.add_argument(
+        "--worktree", metavar="NAME|PATH", help="run in another worktree of this repository: directory name, branch, or path"
     )
+    split = parser.add_argument_group("kitty split")
+    split.add_argument("--pane", action="store_true", help="open in a split right of this window, 45%% wide")
+    split.add_argument("--toggle", action="store_true", help="open the split, or close it if it is open")
+    split.add_argument("--close", action="store_true", help="close the split of this repository")
+    view = parser.add_argument_group("view")
+    view.add_argument("--context", type=int, default=3, choices=CONTEXT_STEPS, help="lines of context around a change")
+    view.add_argument("--layout", choices=LAYOUTS, default="top", help="place of the file tree; the t key cycles it")
     parser.add_argument("--toggle-self", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.pr and args.refs:
