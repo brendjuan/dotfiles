@@ -5,9 +5,21 @@ DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_FILE="$DOTFILES_DIR/config.env"
 source "$DOTFILES_DIR/packages.sh"
 
+sedi() {
+    if [ "$DOTFILES_OS" = "Darwin" ]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
 if ! command -v stow &>/dev/null; then
     echo "GNU Stow is required but not installed."
-    echo "Install it with: sudo apt install stow"
+    if [ "$DOTFILES_OS" = "Darwin" ]; then
+        echo "Install it with: brew install stow"
+    else
+        echo "Install it with: sudo apt install stow"
+    fi
     exit 1
 fi
 
@@ -18,10 +30,25 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 source "$CONFIG_FILE"
 
-LOCKSCREEN="$DOTFILES_DIR/swaylock/.config/swaylock/img/lockscreen.png"
-if [ ! -f "$LOCKSCREEN" ]; then
-    echo "No lockscreen.png found, linking example..."
-    ln -s lockscreen.png.example "$LOCKSCREEN"
+if [ "$DOTFILES_OS" = "Darwin" ]; then
+    KITTY_THEME="$DOTFILES_DIR/kitty/.config/kitty/current-theme.conf"
+    if [ ! -f "$KITTY_THEME" ]; then
+        echo "No current-theme.conf found, seeding from dark.conf..."
+        cp "$DOTFILES_DIR/kitty/.config/kitty/dark.conf" "$KITTY_THEME"
+    fi
+else
+    LOCKSCREEN="$DOTFILES_DIR/swaylock/.config/swaylock/img/lockscreen.png"
+    if [ ! -f "$LOCKSCREEN" ]; then
+        echo "No lockscreen.png found, linking example..."
+        ln -s lockscreen.png.example "$LOCKSCREEN"
+    fi
+
+    WALLPAPER="$DOTFILES_DIR/cwc/.config/cwc/wallpaper.png"
+    WALLPAPER_DEFAULT="$DOTFILES_DIR/cwc/.config/cwc/wallpaper.png.default"
+    if [ ! -f "$WALLPAPER" ] && [ -f "$WALLPAPER_DEFAULT" ]; then
+        echo "No wallpaper.png found, seeding from default..."
+        cp "$WALLPAPER_DEFAULT" "$WALLPAPER"
+    fi
 fi
 
 echo "Backing up existing files that would be overwritten..."
@@ -40,7 +67,7 @@ for pkg in "${PACKAGES[@]}"; do
                 echo "  backed up: ~/$rel_path"
                 backed_up=1
             fi
-        done < <(cd "$DOTFILES_DIR/$pkg" && find . -type f | sed 's|^\./||')
+        done < <(cd "$DOTFILES_DIR/$pkg" && find . \( -type f -o -type l \) | sed 's|^\./||')
     fi
 done
 
@@ -57,7 +84,7 @@ echo "Stowing dotfiles from $DOTFILES_DIR"
 for pkg in "${PACKAGES[@]}"; do
     if [ -d "$DOTFILES_DIR/$pkg" ]; then
         echo "  -> $pkg"
-        stow -d "$DOTFILES_DIR" -t "$HOME" --adopt "$pkg"
+        stow -d "$DOTFILES_DIR" -t "$HOME" --adopt --no-folding "$pkg"
     else
         echo "  !! $pkg not found, skipping"
     fi
@@ -67,16 +94,15 @@ echo ""
 echo "Restoring repo state (undoing any adopted diffs)..."
 git -C "$DOTFILES_DIR" checkout -- .
 
-WALLPAPER="$DOTFILES_DIR/cwc/.config/cwc/wallpaper.png"
-WALLPAPER_DEFAULT="$DOTFILES_DIR/cwc/.config/cwc/wallpaper.png.default"
-if [ ! -f "$WALLPAPER" ] && [ -f "$WALLPAPER_DEFAULT" ]; then
-    echo "No wallpaper.png found, seeding from default..."
-    cp "$WALLPAPER_DEFAULT" "$WALLPAPER"
-fi
-
 echo "Applying config..."
-sed -i "s|{{WORK_GIT_NAME}}|$WORK_GIT_NAME|g; s|{{WORK_GIT_EMAIL}}|$WORK_GIT_EMAIL|g" "$DOTFILES_DIR/git/.gitconfig"
-sed -i "s|{{PERSONAL_GIT_NAME}}|$PERSONAL_GIT_NAME|g; s|{{PERSONAL_GIT_EMAIL}}|$PERSONAL_GIT_EMAIL|g" "$DOTFILES_DIR/git/.gitconfig-personal"
+sedi "s|{{WORK_GIT_NAME}}|$WORK_GIT_NAME|g; s|{{WORK_GIT_EMAIL}}|$WORK_GIT_EMAIL|g" "$DOTFILES_DIR/git/.gitconfig"
+sedi "s|{{PERSONAL_GIT_NAME}}|$PERSONAL_GIT_NAME|g; s|{{PERSONAL_GIT_EMAIL}}|$PERSONAL_GIT_EMAIL|g" "$DOTFILES_DIR/git/.gitconfig-personal"
+
+if [ "$DOTFILES_OS" = "Darwin" ]; then
+    echo ""
+    echo "Done! All packages stowed."
+    exit 0
+fi
 
 mkdir -p "$HOME/.config/dotfiles"
 cat > "$HOME/.config/dotfiles/env.sh" <<'EOF'

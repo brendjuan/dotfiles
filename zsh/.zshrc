@@ -4,19 +4,24 @@ ZSH_THEME="lambda"
 
 zstyle :omz:plugins:ssh-agent identities id_ed25519_personal id_ed25519
 
-plugins=(git bazel bun colored-man-pages colorize command-not-found cp debian dirhistory docker docker-compose emoji golang history kitty mise nomad pip podman python rsync rust ssh ssh-agent sudo systemd task tmux ubuntu uv yum)
+plugins=(git bazel bun colored-man-pages colorize command-not-found cp dirhistory docker docker-compose emoji golang history kitty mise nomad pip podman python rsync rust ssh ssh-agent sudo task tmux uv)
+if [[ "$OSTYPE" == darwin* ]]; then
+  plugins+=(brew macos)
+else
+  plugins+=(debian systemd ubuntu yum)
+fi
 
 fpath=("$HOME/.local/share/zsh/site-functions" $fpath)
 
 source $ZSH/oh-my-zsh.sh
 
-[ -s "/home/bjax/.bun/_bun" ] && source "/home/bjax/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 export PATH="$HOME/.local/bin:$PATH"
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 PROMPT="%{$fg[blue]%}%m%{$reset_color%} $PROMPT"
 
@@ -25,8 +30,8 @@ if [ -d "$HOME/.depot/bin" ]; then
   export PATH="$DEPOT_INSTALL_DIR:$PATH"
 fi
 
-if [ -x "$HOME/.local/bin/mise" ]; then
-  eval "$("$HOME/.local/bin/mise" activate zsh)"
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
 fi
 
 if [ -d "$HOME/.local/share/pnpm" ]; then
@@ -67,13 +72,13 @@ else
   prime-run() { "$@"; }
 fi
 
-export PNPM_HOME="/home/bjax/.local/share/pnpm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 
-export PATH="/home/bjax/.pixi/bin:$PATH"
+export PATH="$HOME/.pixi/bin:$PATH"
 
 zero() { sudo systemctl "$1" zerotier-one.service; }
 
@@ -93,7 +98,7 @@ lsb() {
   done
   [ "$longfmt" -eq 1 ] && onecol=
   command ls $onecol $coloropt "$@" | while IFS= read -r line; do
-    clean=$(printf '%s\n' "$line" | sed 's/\x1b\[[0-9;]*m//g')
+    clean=$(printf '%s\n' "$line" | sed $'s/\x1b\\[[0-9;]*m//g')
     case $clean in total\ *|"") printf '%s\n' "$line"; continue ;; esac
     if [ "$longfmt" -eq 1 ]; then
       name=$(printf '%s\n' "$clean" | awk '{for(i=9;i<=NF;i++)printf "%s%s",$i,(i<NF?" ":"")}')

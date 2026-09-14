@@ -26,6 +26,8 @@ backups/
 
 .stow-local-ignore
 
+Brewfile.lock.json
+
 lockscreen.png
 
 cwc/.config/cwc/wallpaper.png

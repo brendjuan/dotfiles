@@ -2,6 +2,7 @@
 
 Linux desktop configuration managed with [GNU Stow](https://www.gnu.org/software/stow/).
 Every top-level directory is a Stow package. Stow links the files inside it into `$HOME`.
+The terminal and editor packages also install on macOS. See [macOS](#macos).
 
 ![Tiling layout with VS Code, neofetch, and btop](screenshots/tiling.png)
 
@@ -22,11 +23,12 @@ cp config.env.example config.env
 
 `install.sh` does this, in order:
 
-1. Copies every file it would replace to `backups/<timestamp>/`.
-2. Links each package listed in `packages.sh` into `$HOME`.
-3. Fills the `{{PLACEHOLDER}}` values in the git config from `config.env`.
-4. Writes `~/.config/dotfiles/env.sh`. The shells source it to set `CYCLONEDDS_URI` from the ROS workspace.
-5. Asks whether to install the legacy Awesome WM package.
+1. Seeds the local files that git does not track: on Linux the lock screen and wallpaper images, on macOS `kitty/current-theme.conf` from `dark.conf`.
+2. Copies every file it would replace to `backups/<timestamp>/`.
+3. Links each package listed in `packages.sh` into `$HOME`. The list depends on the operating system. Stow creates real directories and links single files, so programs that write into `~/.claude` or `~/.config/Code` never write into this repo.
+4. Fills the `{{PLACEHOLDER}}` values in the git config from `config.env`.
+5. Linux only: writes `~/.config/dotfiles/env.sh`. The shells source it to set `CYCLONEDDS_URI` from the ROS workspace.
+6. Linux only: asks whether to install the legacy Awesome WM package.
 
 `restore.sh` unlinks the packages and copies a backup back into `$HOME`.
 
@@ -37,6 +39,23 @@ stow -t ~ kitty
 stow -D -t ~ kitty
 ```
 
+### Install on macOS
+
+`brew bundle` installs what the macOS packages need: stow, git, git-lfs, gh, tmux, uv, emacs, kitty, and VS Code.
+Oh My Zsh has no Homebrew formula, so its own installer runs first.
+
+```bash
+brew bundle
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+cp config.env.example config.env
+"$EDITOR" config.env
+./install.sh
+```
+
+`install.sh` detects macOS with `uname` and stows the packages in `MACOS_PACKAGES`.
+`ROS_WORKSPACE` is not used, so the example value can stay.
+The [macOS](#macos) section lists which packages are included and why.
+
 ## config.env
 
 This file is not tracked.
@@ -45,7 +64,7 @@ This file is not tracked.
 |---|---|---|
 | `WORK_GIT_NAME`, `WORK_GIT_EMAIL` | `~/.gitconfig` | Default git identity |
 | `PERSONAL_GIT_NAME`, `PERSONAL_GIT_EMAIL` | `~/.gitconfig-personal` | Git identity for repositories under `~/Personal/` |
-| `ROS_WORKSPACE` | `~/.config/dotfiles/env.sh` | ROS workspace whose nix dev shell provides the CycloneDDS config |
+| `ROS_WORKSPACE` | `~/.config/dotfiles/env.sh` | ROS workspace whose nix dev shell provides the CycloneDDS config. Linux only. |
 
 ## Packages
 
@@ -53,12 +72,13 @@ This file is not tracked.
 |---|---|
 | `zsh`, `bash` | Shell setup. depot, mise, and pnpm are enabled only when they are installed. |
 | `git` | Git config with git-lfs and a second identity for `~/Personal/` |
-| `kitty` | Terminal. `current-theme.conf` is a local file that the high-contrast toggle rewrites. |
+| `kitty` | Terminal. `current-theme.conf` is a local file. On Linux the high-contrast toggle writes it, on macOS `install.sh` seeds it from `dark.conf`. |
 | `tmux` | Terminal features for tmux inside kitty |
 | `mako` | Notification daemon |
 | `swaylock` | Screen locker. `scripts/gen_lockscreen.py` draws the background image. |
 | `cwc` | The cwc Wayland compositor: Lua config, waybar, rofi menus, helper scripts. See [cwc](#cwc). |
 | `vscode` | VS Code user settings |
+| `vscode-macos` | The same VS Code settings, linked at `~/Library/Application Support/Code/User/`, where VS Code reads them on macOS. |
 | `k4` | `k4 [dir]` opens kitty with four windows in a 2x2 grid |
 | `mx` | `mx` reads the battery and sets the DPI of a Logitech mouse. See [mx](#mx). |
 | `claude-diff` | `claude-diff` shows a git diff with a file tree and expandable context, in a kitty split next to Claude Code. See [claude-diff](#claude-diff). |
@@ -71,6 +91,24 @@ This file is not tracked.
 - `gen_lockscreen.py` and `glitch-wallpaper.sh` generate the lock screen and wallpaper images. They need Pillow and ImageMagick.
 - `gps-fix.py` and `heading_cli.py` are ROS 2 terminal tools that show the vehicle's GPS fix and heading.
 - `share-internet.sh` turns this machine into a NAT gateway for another network. Run it with `--help`.
+
+## macOS
+
+`MACOS_PACKAGES` in `packages.sh` holds the packages that work on a Mac.
+A package is included when macOS has a program that reads the same config file.
+The other packages are Linux desktop parts with no such program.
+
+| Package | On macOS |
+|---|---|
+| `zsh` | zsh is the default shell, and Oh My Zsh runs on it. The `debian`, `ubuntu`, `yum`, and `systemd` plugins are replaced by `brew` and `macos`. |
+| `git` | Same program. `brew bundle` installs git-lfs and gh. |
+| `kitty` | kitty.app from Homebrew. It reads `~/.config/kitty/kitty.conf` on macOS too, and the cask links `kitty` and `kitten` into the PATH. |
+| `tmux` | Same program |
+| `vscode-macos` | VS Code reads `~/Library/Application Support/Code/User/settings.json`. This package links the shared settings file at that path. |
+| `claude` | Same program, same `~/.claude` directory |
+| `k4`, `claude-diff` | They only need kitty, uv, and gh. |
+
+The zsh config runs on both systems. Its Linux-only parts, such as `lspci`, `systemctl`, and ROS, are guarded or do nothing when the program is missing.
 
 ## cwc
 
