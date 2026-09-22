@@ -29,6 +29,7 @@ cp config.env.example config.env
 4. Fills the `{{PLACEHOLDER}}` values in the git config from `config.env`.
 5. Linux only: writes `~/.config/dotfiles/env.sh`. The shells source it to set `CYCLONEDDS_URI` from the ROS workspace.
 6. Linux only: asks whether to install the legacy Awesome WM package.
+7. Linux only: enables the timer that records open kitty sessions. See [Kitty session resume](#kitty-session-resume).
 
 `restore.sh` unlinks the packages and copies a backup back into `$HOME`.
 
@@ -109,6 +110,21 @@ The other packages are Linux desktop parts with no such program.
 | `k4`, `claude-diff` | They only need kitty, uv, and gh. |
 
 The zsh config runs on both systems. Its Linux-only parts, such as `lspci`, `systemctl`, and ROS, are guarded or do nothing when the program is missing.
+
+## Kitty session resume
+
+Linux only. A systemd user timer runs `save-session.py` every minute.
+The script records every open kitty window, tab, and split, with its working directory, to `~/.local/state/kitty/last-session.conf`.
+After a crash, a dead battery, or a reboot, run:
+
+```bash
+~/.config/kitty/resume-session.sh
+```
+
+Every window opens again in its old directory.
+A window that was running `claude` starts `claude --continue`, which resumes the last Claude Code conversation of that directory.
+Other programs do not restart. Their windows open as plain shells.
+At most the last minute of changes is lost.
 
 ## cwc
 
